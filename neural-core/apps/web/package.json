@@ -1,0 +1,29 @@
+{
+  "name": "@neural-core/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@neural-core/shared": "workspace:*",
+    "@react-three/fiber": "^8.17.10",
+    "next": "^15.0.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.169.0",
+    "eslint": "^9.13.0",
+    "eslint-config-next": "15.0.3",
+    "typescript": "^5.6.3"
+  }
+}

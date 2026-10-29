@@ -1,0 +1,32 @@
+:root {
+  /* surfaces */
+  --bg-0: #0b0d10;
+  --bg-1: #111418;
+  --bg-2: #171b21;
+  --bg-3: #1e232b;
+  --edge-hi: rgba(255, 255, 255, 0.08);
+  --edge-lo: rgba(0, 0, 0, 0.6);
+
+  /* text */
+  --text-1: #e8ecf1;
+  --text-2: #a3adba;
+  --text-3: #6b7685;
+
+  /* signal colors: used with discipline */
+  --focus: #3fd6c0;        /* locked in */
+  --focus-dim: #1f6f64;
+  --warn: #f2a43a;         /* drifting */
+  --alert: #e5584a;        /* scattered / error */
+  --accent: #7d8cff;       /* rare, interactive highlight */
+
+  /* depth */
+  --shadow-1: 0 1px 0 var(--edge-hi) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 1px 0 var(--edge-hi) inset, 0 24px 60px rgba(0, 0, 0, 0.5);
+  --radius-1: 10px;
+  --radius-2: 16px;
+
+  /* type */
+  --font-ui: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-display: "Barlow Condensed", "IBM Plex Sans", sans-serif;
+}
