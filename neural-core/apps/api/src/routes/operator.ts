@@ -45,6 +45,7 @@ export function operatorRouter(ctx: AppContext): Router {
         runs,
         connections: ctx.hub.connections(),
         frozenAt: store.frozenAt,
+        database: ctx.db ? (ctx.db.ready ? "connected" : "unavailable") : "disabled",
         logs: ctx.logs.slice(-60),
         players: store.players.size,
         attemptsAllowed: ctx.env.ATTEMPTS_PER_PLAYER,

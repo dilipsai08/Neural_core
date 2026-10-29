@@ -135,6 +135,9 @@ function Console({ pin, onLock }: { pin: string; onLock: () => void }) {
           <span className={styles.chip} data-ok>
             <span className="num">{state?.players ?? 0}</span> players
           </span>
+          <span className={styles.chip} data-ok={state?.database === "connected"}>
+            <i /> PostgreSQL {state?.database ?? "…"}
+          </span>
           <Button
             size="sm"
             variant={state?.frozenAt ? "danger" : "secondary"}

@@ -17,25 +17,49 @@ BioAmp EXG Pill → Arduino UNO R4 (250 Hz) → USB → Node server (DSP → foc
 - **Hardware link, DSP and tuning:** [`docs/HARDWARE_ROADMAP.md`](docs/HARDWARE_ROADMAP.md)
 - **Firmware:** [`firmware/`](firmware/README.md)
 
-## Run it at the event
+## Run it locally
 
-Requirements: Node 20+ and pnpm 9 on the server laptop. Kiosks only need Chrome.
+Requirements: Node 20+, pnpm 9, and PostgreSQL 14+ (for the leaderboard).
 
-```bash
-pnpm install
-pnpm build
-cp .env.example .env     # set OPERATOR_PIN, STATIONS, EVENT_NAME
-pnpm start               # one process, one port (3001): site + API + WebSocket
-```
+1. Install PostgreSQL and create the database once:
 
-The server prints its LAN address. Then open:
+   ```bash
+   createdb -U postgres neural_core
+   ```
 
-| Screen | URL |
+   On Windows use the PostgreSQL installer, then run the same command from the
+   "SQL Shell"/command prompt, or create `neural_core` in pgAdmin. Tables are
+   created automatically when the server starts.
+
+2. Configure and start:
+
+   ```bash
+   pnpm install
+   cp .env.example .env     # Windows: copy .env.example .env  ·  set DATABASE_URL, OPERATOR_PIN, STATIONS
+   pnpm dev                 # game on http://localhost:3000, server on http://localhost:3001
+   ```
+
+   Or run the built version on a single port:
+
+   ```bash
+   pnpm build
+   pnpm start               # everything on http://localhost:3001
+   ```
+
+The server log shows `postgres: connected, synced …` when the database is
+reachable. If Postgres is down, the game keeps working: every run is still
+written to `data/ledger.jsonl`, the leaderboard is served from it, and the
+database is re-synced automatically when it comes back.
+
+| Screen | URL (dev: port 3000, built: port 3001) |
 |---|---|
-| Kiosk N (remembered after the first visit) | `http://SERVER:3001/?station=N` |
-| Projector leaderboard | `http://SERVER:3001/leaderboard/` |
-| Operator console (PIN) | `http://SERVER:3001/operator/` |
-| End-of-day winner reveal | `http://SERVER:3001/winners/` |
+| Kiosk N (remembered after the first visit) | `http://localhost:3000/?station=N` |
+| Projector leaderboard | `http://localhost:3000/leaderboard/` |
+| Operator console (PIN) | `http://localhost:3000/operator/` |
+| End-of-day winner reveal | `http://localhost:3000/winners/` |
+
+Other laptops on the same network can open the same pages using the server
+laptop's IP instead of `localhost`.
 
 Sensor on a kiosk laptop instead of the server? Run the bridge there:
 
@@ -58,7 +82,7 @@ pnpm lint
 ## Layout
 
 ```
-apps/api        Express + ws server: sensor sources, DSP, stations, run verification, ledger store, operator API
+apps/api        Express + ws server: sensor sources, DSP, stations, run verification, ledger + PostgreSQL store, operator API
 apps/web        Next.js (static export): kiosk flow, three.js arena, projector, operator console
 packages/shared Types, zod schemas, constants, seeded RNG, wave generator, chain tracker, authoritative scoring
 firmware        Arduino UNO R4 raw sample streamer
@@ -83,7 +107,7 @@ The current brief takes priority over the original spec:
 - **60-second** round (was 90 s). No practice round. Calibration is 20 s + 20 s.
 - **Electrical-zombie** theme and story replace the abstract shooting range.
 - **Focus-chain multipliers** ×1/2/3/5/8 for sustained focus replace the flat 1×/2×/3× tiers.
-- **Append-only JSONL ledger** (`data/ledger.jsonl`, fsynced per write) instead of PostgreSQL. It needs zero setup offline, never loses a finished run and is easy to audit. CSV export is in the operator console.
+- **PostgreSQL leaderboard plus a local ledger.** Players and runs are stored in PostgreSQL (`players`, `runs` tables), which serves the leaderboard. Every change is also appended to `data/ledger.jsonl` first, so a database outage never loses a run. CSV export is in the operator console.
 - **Up to 3 ranked attempts** per player (configurable, `1` restores the original rule), best run ranked.
 - **Single process, single port:** the API serves the static Next export, so the venue runs one command.
 

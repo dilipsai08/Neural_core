@@ -50,6 +50,7 @@ export function publicRouter(ctx: AppContext): Router {
         uptimeS: Math.round(process.uptime()),
         players: store.players.size,
         runs: store.runs.size,
+        database: ctx.db ? (ctx.db.ready ? "connected" : `unavailable: ${ctx.db.lastError ?? "connecting"}`) : "disabled",
         stations: [...ctx.stations.values()].map((s) => s.status()),
       });
     }),
@@ -266,9 +267,18 @@ export function publicRouter(ctx: AppContext): Router {
   // ─── Leaderboard ──────────────────────────────────────────────────────
   r.get(
     "/leaderboard",
-    wrap(ctx, (req, res) => {
+    wrap(ctx, async (req, res) => {
       const { limit } = parse(leaderboardQuerySchema, req.query);
-      const all = store.rankedRuns();
+      let all = store.rankedRuns();
+      let source = "ledger";
+      if (ctx.db?.ready) {
+        try {
+          all = await ctx.db.leaderboard(store.frozenAt);
+          source = "postgres";
+        } catch (err) {
+          ctx.log(`postgres leaderboard query failed, using ledger: ${err instanceof Error ? err.message : err}`);
+        }
+      }
       res.json({
         entries: all.slice(0, limit),
         totalRanked: all.length,
@@ -276,6 +286,7 @@ export function publicRouter(ctx: AppContext): Router {
         frozenAt: store.frozenAt,
         event: env.EVENT_NAME,
         top: all.slice(0, ATTRACT_TOP_N).length,
+        source,
       });
     }),
   );

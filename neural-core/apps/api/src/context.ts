@@ -4,10 +4,13 @@ import type { Env } from "./env.js";
 import type { Hub } from "./ws/index.js";
 import { Station } from "./stations/station.js";
 import type { Store } from "./store/store.js";
+import type { LeaderboardDb } from "./store/pg.js";
 
 export interface AppContext {
   env: Env;
   store: Store;
+  /** PostgreSQL leaderboard; null when DATABASE_URL is empty. */
+  db: LeaderboardDb | null;
   hub: Hub;
   stations: Map<number, Station>;
   logs: string[];
@@ -21,6 +24,7 @@ export function createContext(env: Env, store: Store, hubFactory: (ctx: AppConte
   const ctx: AppContext = {
     env,
     store,
+    db: null,
     stations: new Map<number, Station>(),
     logs,
     log(msg: string) {
@@ -72,5 +76,6 @@ export function sendError(res: Response, err: unknown, log: (m: string) => void)
   }
   const message = err instanceof Error ? err.message : String(err);
   log(`error: ${message}`);
-  res.status(500).json({ error: { code: "INTERNAL", message: "Something went wrong on the server. The operator panel has details." } });
+  // Local event server: show the real cause so a volunteer can act on it.
+  res.status(500).json({ error: { code: "INTERNAL", message: `Server error: ${message}` } });
 }

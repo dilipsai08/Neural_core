@@ -34,6 +34,8 @@ const stationSpecSchema = z
   });
 
 const envSchema = z.object({
+  /** PostgreSQL for the leaderboard. Set to an empty string to run on the ledger only. */
+  DATABASE_URL: z.string().default("postgresql://postgres:postgres@localhost:5432/neural_core"),
   PORT: z.coerce.number().int().default(3001),
   HOST: z.string().default("0.0.0.0"),
   OPERATOR_PIN: z.string().min(4).default("2468"),

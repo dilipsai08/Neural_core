@@ -7,6 +7,7 @@ import { networkInterfaces } from "node:os";
 import { getEnv } from "./env.js";
 import { createContext } from "./context.js";
 import { Store } from "./store/store.js";
+import { LeaderboardDb } from "./store/pg.js";
 import { Hub } from "./ws/index.js";
 import { publicRouter } from "./routes/public.js";
 import { operatorRouter } from "./routes/operator.js";
@@ -18,6 +19,15 @@ const ctx = createContext(env, store, (c) =>
     void c.station(station).ingestBridge(counts, bits, from);
   }, c.log),
 );
+
+if (env.DATABASE_URL) {
+  const db = new LeaderboardDb(env.DATABASE_URL, store, ctx.log);
+  ctx.db = db;
+  store.onChange = (entry) => db.mirror(entry);
+  void db.start();
+} else {
+  ctx.log("DATABASE_URL is empty: leaderboard served from the local ledger only");
+}
 
 const app = express();
 app.disable("x-powered-by");
@@ -53,6 +63,7 @@ server.listen(env.PORT, env.HOST, () => {
     .filter((i) => i && i.family === "IPv4" && !i.internal)
     .map((i) => i!.address);
   ctx.log(`API + WS on port ${env.PORT}. Data: ${env.DATA_DIR}`);
+  ctx.log(existsSync(env.WEB_DIST) ? `open http://localhost:${env.PORT}` : "open http://localhost:3000 (Next dev server)");
   for (const ip of ips) ctx.log(`kiosks on the LAN: http://${ip}:${env.PORT}  (WS ws://${ip}:${env.PORT}/ws)`);
   if (!existsSync(env.WEB_DIST)) ctx.log("web build not found; run the Next dev server on :3000 or `pnpm build`");
 });
@@ -60,6 +71,7 @@ server.listen(env.PORT, env.HOST, () => {
 async function shutdown() {
   ctx.hub.close();
   await Promise.all([...ctx.stations.values()].map((s) => s.dispose()));
+  await ctx.db?.close().catch(() => undefined);
   server.close();
   process.exit(0);
 }

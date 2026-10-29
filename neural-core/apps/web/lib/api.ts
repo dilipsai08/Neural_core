@@ -121,6 +121,7 @@ export interface OperatorState {
   runs: OperatorRun[];
   connections: Array<{ role: string; station: number | null; addr: string }>;
   frozenAt: string | null;
+  database: "connected" | "unavailable" | "disabled";
   logs: string[];
   players: number;
   attemptsAllowed: number;

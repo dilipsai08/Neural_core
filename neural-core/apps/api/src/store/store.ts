@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, openSync, fsyncSync, closeSync } from "node:fs";
+import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, writeSync } from "node:fs";
 import path from "node:path";
 import {
   formatDisplayId,
@@ -20,7 +20,7 @@ import {
  * A crash or power cut can never lose a finished run, and the file is
  * human-readable for disputes.
  */
-type LedgerEntry =
+export type LedgerEntry =
   | { op: "player"; at: string; player: Player }
   | { op: "run:start"; at: string; run: Run }
   | { op: "run:go"; at: string; runId: number; goAt: number }
@@ -51,6 +51,8 @@ export class Store {
   readonly calibrations: Array<{ station: number; playerId: number | null; calibration: Calibration; at: string }> = [];
   readonly audit: Array<{ at: string; actor: string; action: string; details: Record<string, unknown> }> = [];
   frozenAt: string | null = null;
+  /** Called after every new ledger entry (used to mirror into PostgreSQL). */
+  onChange: ((entry: LedgerEntry) => void) | null = null;
 
   private readonly file: string;
   private byContact = new Map<string, number>();
@@ -76,14 +78,17 @@ export class Store {
   }
 
   private write(entry: LedgerEntry): void {
-    appendFileSync(this.file, JSON.stringify(entry) + "\n");
-    const fd = openSync(this.file, "r");
+    // Append and fsync through one writable handle. (fsync on a read-only
+    // handle fails with EPERM on Windows.)
+    const fd = openSync(this.file, "a");
     try {
+      writeSync(fd, JSON.stringify(entry) + "\n");
       fsyncSync(fd);
     } finally {
       closeSync(fd);
     }
     this.apply(entry);
+    this.onChange?.(entry);
   }
 
   private apply(e: LedgerEntry): void {
