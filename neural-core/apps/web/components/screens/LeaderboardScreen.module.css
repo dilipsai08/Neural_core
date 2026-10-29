@@ -1,0 +1,130 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  padding: var(--s-5) var(--s-7);
+  gap: var(--s-4);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.03), transparent 40%),
+    var(--bg-0);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.headline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.title {
+  font-size: 64px;
+  font-weight: 800;
+}
+
+.chips {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.chip,
+.chipWarn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 44px;
+  padding: 0 var(--s-3);
+  border-radius: var(--radius-1);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-1);
+  font-size: 20px;
+  color: var(--text-2);
+}
+
+.chip :global(.num) {
+  color: var(--text-1);
+}
+
+.chipWarn {
+  background: var(--alert-dim);
+  color: #ffc2ba;
+}
+
+.frozen {
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--radius-1);
+  background: var(--volt-dim);
+  color: var(--volt);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  gap: var(--s-5);
+}
+
+.board {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.live {
+  padding-top: var(--s-5);
+}
+
+.stations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stations li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.player {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 32px;
+  text-transform: uppercase;
+}
+
+.how {
+  font-size: 18px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.how b {
+  color: var(--text-1);
+}
+
+.muted {
+  color: var(--text-3);
+  font-size: 22px;
+}

@@ -1,0 +1,226 @@
+.screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Darken the left for legibility; the horde stays visible on the right. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 7, 9, 0.94) 0%, rgba(5, 7, 9, 0.78) 34%, rgba(5, 7, 9, 0.15) 62%, rgba(5, 7, 9, 0.35) 100%),
+    linear-gradient(0deg, rgba(5, 7, 9, 0.85) 0%, transparent 22%);
+}
+
+.layout {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: var(--s-6);
+  padding: var(--s-6) var(--s-6) 0 var(--s-7);
+  min-height: 0;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 760px;
+  padding-bottom: var(--s-6);
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.liveDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--alert);
+  box-shadow: 0 0 0 3px var(--alert-dim);
+  animation: pulse 2s var(--ease) infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  margin: var(--s-3) 0 var(--s-4);
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  line-height: 0.84;
+  letter-spacing: 0.005em;
+  /* stamped steel: lit from the top-left */
+  background: linear-gradient(176deg, #f3f5f6 0%, #c9d0d6 46%, #7d868e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.55));
+}
+
+.titleCore {
+  position: relative;
+  background: linear-gradient(176deg, #ffe07a 0%, var(--volt) 50%, #a27a0c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: flicker 7s steps(1) infinite;
+}
+
+/* A failing tube: the word "Core" drops out for a few frames now and then. */
+@keyframes flicker {
+  0%,
+  41%,
+  43%,
+  44.5%,
+  100% {
+    opacity: 1;
+  }
+  42%,
+  44% {
+    opacity: 0.35;
+  }
+}
+
+.lead {
+  max-width: 620px;
+  font-size: var(--fs-lg);
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.lead strong {
+  color: var(--text-1);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+}
+
+.duration {
+  font-size: var(--fs-sm);
+  color: var(--text-3);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: var(--s-6) 0 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  background: var(--edge-hi);
+  box-shadow: var(--shadow-2);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  background: linear-gradient(180deg, rgba(25, 30, 35, 0.92), rgba(15, 18, 21, 0.92));
+}
+
+.stepN {
+  font-size: var(--fs-xs);
+  color: var(--volt);
+}
+
+.stepTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stepBody {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+  padding-bottom: var(--s-6);
+}
+
+.board {
+  padding-top: var(--s-5);
+}
+
+.live {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+}
+
+.liveText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+.footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-7) var(--s-4);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.warn {
+  color: var(--warn);
+}
+
+@media (max-width: 1280px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    padding-left: var(--s-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titleCore,
+  .liveDot {
+    animation: none;
+  }
+}

@@ -1,0 +1,214 @@
+.body {
+  grid-template-columns: 340px minmax(0, 1fr) 320px;
+  align-items: center;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  align-self: start;
+  padding-top: var(--s-3);
+}
+
+.phase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3) var(--s-4);
+  opacity: 0.55;
+  transition: opacity var(--t-med) var(--ease);
+}
+
+.phase[data-state="active"] {
+  opacity: 1;
+  box-shadow: var(--shadow-2), 0 0 0 1px rgba(244, 196, 48, 0.4) inset;
+}
+
+.phase[data-state="done"] {
+  opacity: 0.85;
+}
+
+.phaseHead {
+  display: flex;
+  justify-content: space-between;
+}
+
+.phaseN {
+  font-size: var(--fs-xs);
+  color: var(--volt);
+}
+
+.phaseState {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.phase[data-state="done"] .phaseState {
+  color: var(--steady);
+}
+
+.phaseTitle {
+  font-size: var(--fs-xl);
+}
+
+.phaseBody {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+
+.phaseTime {
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-3);
+}
+
+.beaconWrap {
+  position: relative;
+  width: min(44vh, 420px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: var(--s-3);
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.ringTrack {
+  fill: none;
+  stroke: var(--bg-3);
+  stroke-width: 6;
+}
+
+.ringFill {
+  fill: none;
+  stroke: var(--volt);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 578;
+  transition: stroke-dashoffset 500ms linear;
+}
+
+.beaconWrap[data-phase="focus"] .ringFill {
+  stroke: var(--arc);
+}
+
+/* Breathing beacon: 4 s in, 6 s out, about six breaths a minute. */
+.beacon {
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #e9fbff, var(--arc) 45%, #0d4a5c 100%);
+  box-shadow: 0 0 60px rgba(127, 227, 255, 0.35);
+  opacity: 0.85;
+}
+
+.beaconWrap[data-phase="relax"][data-active="true"] .beacon {
+  animation: breathe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.beaconWrap[data-phase="focus"] .beacon {
+  width: 18%;
+  background: radial-gradient(circle at 40% 35%, #fff6d6, var(--volt) 50%, #6f5408 100%);
+  box-shadow: 0 0 40px rgba(244, 196, 48, 0.35);
+}
+
+@keyframes breathe {
+  0% {
+    transform: scale(0.75);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(0.75);
+  }
+}
+
+.timer {
+  position: absolute;
+  bottom: 14%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.timer :global(.num) {
+  font-size: var(--fs-xl);
+}
+
+.timerUnit {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.instruction {
+  font-size: var(--fs-xl);
+}
+
+.instructionSub {
+  max-width: 560px;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  min-height: 120px;
+}
+
+.doneBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.doneIcon {
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  color: var(--steady);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-2), 0 0 0 1px rgba(73, 214, 164, 0.35) inset;
+}
+
+.live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.gaugePanel {
+  display: grid;
+  place-items: center;
+  padding: var(--s-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beaconWrap[data-phase="relax"][data-active="true"] .beacon {
+    animation: none;
+  }
+}

@@ -21,3 +21,9 @@
 | 2026-10-28 19:42 | Gemini 3.8 Flash | Launched local development server | Started Next.js dev server on http://localhost:3000 for local browser access |
 | 2026-10-29 21:12 | Gemini 3.8 Flash | Restarted local development server | Re-launched Next.js dev server on http://localhost:3000 following server restart |
 | 2026-10-29 21:21 | Gemini 3.8 Flash | Initialized Git repository & uploaded to GitHub | Pushed full codebase, specs, and configurations to https://github.com/dilipsai08/Neural_core.git (main branch) |
+| 2026-10-29 16:30 | Claude (Claude Code) | Read info.md, the Neural Core flow PDF and the BioAmp kit card; reviewed the existing repo | Planned a full redesign: 60 s electrical-zombie game, real-time EEG pipeline, multi-station event server |
+| 2026-10-29 16:40 | Claude (Claude Code) | Rebuilt packages/shared | Constants, zod schemas, seeded RNG + noise, deterministic wave generator, focus-chain tracker, authoritative scoring; 13 tests |
+| 2026-10-29 16:50 | Claude (Claude Code) | Rebuilt apps/api | Biquad filters, FFT/Welch band powers, engagement index, blink/tension/quality, calibration, serial/bridge/fake/replay sources, stations, WebSocket hub, JSONL ledger store, run verification, operator API; 18 tests |
+| 2026-10-29 17:00 | Claude (Claude Code) | Firmware + bridge | UNO R4 250 Hz streamer sketch, node station bridge with --simulate, browser Web Serial bridge |
+| 2026-10-29 17:20 | Claude (Claude Code) | Rebuilt apps/web | three.js arena (skinned procedural zombies, lightning, sparks, debris physics, substation world, focus lens post-FX), HUD, kiosk flow, result, projector leaderboard, winners, operator console |
+| 2026-10-29 17:40 | Claude (Claude Code) | Verified end to end | Playwright full flow with fake EEG (server score matched client), production single-port build, lint/typecheck/tests green; wrote docs/HARDWARE_ROADMAP.md and README |

@@ -1,0 +1,110 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #050708;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wrap[data-mode="play"] {
+  cursor: none;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Reticle: ring opens with distraction (--ring), tightens and lights up when locked in. */
+.crosshair {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  will-change: transform;
+}
+
+.crosshair svg {
+  position: absolute;
+  left: -50px;
+  top: -50px;
+  width: 100px;
+  height: 100px;
+  overflow: visible;
+  fill: none;
+}
+
+.crosshair :global(.ring) {
+  stroke: var(--text-1);
+  stroke-width: 1.6;
+  transform: scale(var(--ring, 1));
+  transform-origin: 0 0;
+  transition: transform 220ms var(--ease), stroke 220ms var(--ease);
+  opacity: 0.85;
+}
+
+.crosshair :global(.ticks) {
+  stroke: var(--text-1);
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.crosshair :global(.dot) {
+  fill: var(--volt);
+}
+
+.crosshair[data-band="locked"] :global(.ring),
+.crosshair[data-band="locked"] :global(.ticks) {
+  stroke: var(--arc);
+  filter: drop-shadow(0 0 4px var(--arc));
+}
+
+.crosshair[data-band="steady"] :global(.ring) {
+  stroke: var(--steady);
+}
+
+.crosshair[data-band="drifting"] :global(.ring) {
+  stroke: var(--warn);
+}
+
+.crosshair[data-band="scattered"] :global(.ring) {
+  stroke: var(--alert);
+  stroke-dasharray: 6 5;
+}
+
+.crosshair[data-ready="0"] :global(.dot) {
+  fill: var(--text-3);
+}
+
+.popup {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: 0.02em;
+  color: var(--text-1);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7), 0 0 18px rgba(127, 227, 255, 0.35);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.popupMult {
+  margin-left: 8px;
+  font-size: 26px;
+  color: var(--arc);
+}
+
+.popupBad {
+  color: #ff8f82;
+  font-size: 26px;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7);
+}

@@ -1,0 +1,103 @@
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 0;
+  border-radius: var(--radius-1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    transform var(--t-fast) var(--ease),
+    background-color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.sm {
+  height: 32px;
+  padding: 0 var(--s-3);
+  font-size: var(--fs-sm);
+}
+
+.md {
+  height: 48px;
+  padding: 0 var(--s-4);
+  font-size: var(--fs-md);
+}
+
+.lg {
+  height: 72px;
+  padding: 0 var(--s-5);
+  font-size: var(--fs-xl);
+  gap: var(--s-3);
+}
+
+/* Hazard-yellow pressable: a physical key with a lit top edge and a base. */
+.primary {
+  background: linear-gradient(180deg, #ffd24d 0%, var(--volt) 45%, var(--volt-deep) 100%);
+  color: var(--text-on-accent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.25) inset,
+    0 4px 0 #6f5408,
+    0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffdc6b 0%, #ffcc35 45%, var(--volt-deep) 100%);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.25) inset,
+    0 1px 0 #6f5408,
+    0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+.secondary {
+  background: linear-gradient(180deg, var(--bg-4), var(--bg-3));
+  color: var(--text-1);
+  box-shadow: var(--shadow-1);
+}
+
+.secondary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #283038, var(--bg-4));
+}
+
+.secondary:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-inset);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--text-2);
+}
+
+.ghost:hover:not(:disabled) {
+  color: var(--text-1);
+  background: var(--edge-mid);
+}
+
+.danger {
+  background: linear-gradient(180deg, #3a1b18, #2a1412);
+  color: #ffb3a9;
+  box-shadow: 0 0 0 1px rgba(229, 88, 74, 0.35) inset, var(--shadow-1);
+}
+
+.danger:hover:not(:disabled) {
+  background: linear-gradient(180deg, #4a211d, #351815);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+  filter: saturate(0.4);
+}

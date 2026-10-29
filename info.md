@@ -1,5 +1,10 @@
 # Neural Core: AI-Assisted Development Spec
 
+> **Update (2026-10-29): the current brief supersedes parts of this spec.** The game is now a 60-second
+> electrical-zombie shift with focus-chain multipliers (×1/2/3/5/8), there is no practice round, storage is an
+> append-only JSONL ledger instead of PostgreSQL, and the API serves the static web build on one port.
+> See `neural-core/README.md` ("Decisions that supersede info.md") and `neural-core/docs/HARDWARE_ROADMAP.md`.
+
 > Read this file fully before writing code. It is the source of truth for scope, architecture, conventions and UI quality. If something here conflicts with a quick idea, follow this file and ask before deviating.
 
 ---

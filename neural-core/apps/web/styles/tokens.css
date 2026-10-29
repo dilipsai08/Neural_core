@@ -1,32 +1,93 @@
+/*
+ * Neural Core design tokens. "Substation at night": machined graphite
+ * surfaces, hazard yellow as the single interactive accent, and arc blue
+ * reserved for the live focus state.
+ */
 :root {
   /* surfaces */
-  --bg-0: #0b0d10;
-  --bg-1: #111418;
-  --bg-2: #171b21;
-  --bg-3: #1e232b;
-  --edge-hi: rgba(255, 255, 255, 0.08);
-  --edge-lo: rgba(0, 0, 0, 0.6);
+  --bg-0: #07090b;
+  --bg-1: #0c0f12;
+  --bg-2: #12161a;
+  --bg-3: #191e23;
+  --bg-4: #20262c;
+  --edge-hi: rgba(255, 255, 255, 0.075);
+  --edge-mid: rgba(255, 255, 255, 0.04);
+  --edge-lo: rgba(0, 0, 0, 0.65);
+  --scrim: rgba(5, 7, 9, 0.72);
 
   /* text */
-  --text-1: #e8ecf1;
-  --text-2: #a3adba;
-  --text-3: #6b7685;
+  --text-1: #e8ecef;
+  --text-2: #a4adb5;
+  --text-3: #6a747d;
+  --text-on-accent: #14110a;
 
-  /* signal colors: used with discipline */
-  --focus: #3fd6c0;        /* locked in */
-  --focus-dim: #1f6f64;
-  --warn: #f2a43a;         /* drifting */
-  --alert: #e5584a;        /* scattered / error */
-  --accent: #7d8cff;       /* rare, interactive highlight */
+  /* signal colours: used with discipline */
+  --volt: #f4c430; /* the one interactive accent: hazard yellow */
+  --volt-deep: #c99a12;
+  --volt-dim: rgba(244, 196, 48, 0.14);
+  --arc: #7fe3ff; /* locked-in focus, electricity */
+  --arc-dim: rgba(127, 227, 255, 0.16);
+  --steady: #49d6a4; /* steady focus */
+  --warn: #f29a3a; /* drifting */
+  --alert: #e5584a; /* scattered / error */
+  --alert-dim: rgba(229, 88, 74, 0.16);
+  --rot: #9cbf5a; /* the infected: enemy accents only */
+
+  /* metals for podium plates */
+  --gold-1: #e9c877;
+  --gold-2: #8f6b26;
+  --silver-1: #d9dee3;
+  --silver-2: #7b838b;
+  --bronze-1: #d79a6a;
+  --bronze-2: #7a4626;
 
   /* depth */
-  --shadow-1: 0 1px 0 var(--edge-hi) inset, 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-2: 0 1px 0 var(--edge-hi) inset, 0 24px 60px rgba(0, 0, 0, 0.5);
-  --radius-1: 10px;
-  --radius-2: 16px;
+  --shadow-1: 0 1px 0 var(--edge-hi) inset, 0 -1px 0 var(--edge-lo) inset, 0 6px 18px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-2: 0 1px 0 var(--edge-hi) inset, 0 -1px 0 var(--edge-lo) inset, 0 18px 48px rgba(0, 0, 0, 0.5),
+    0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-inset: inset 0 2px 6px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  --radius-1: 6px;
+  --radius-2: 10px;
+  --radius-3: 16px;
+
+  /* spacing: 8px grid */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 16px;
+  --s-4: 24px;
+  --s-5: 32px;
+  --s-6: 48px;
+  --s-7: 64px;
+  --s-8: 96px;
 
   /* type */
   --font-ui: "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --font-display: "Barlow Condensed", "IBM Plex Sans", sans-serif;
+
+  --fs-xs: clamp(12px, 0.68vw, 14px);
+  --fs-sm: clamp(14px, 0.83vw, 16px);
+  --fs-md: clamp(17px, 1.04vw, 20px);
+  --fs-lg: clamp(20px, 1.35vw, 26px);
+  --fs-xl: clamp(28px, 2.1vw, 40px);
+  --fs-2xl: clamp(40px, 3.3vw, 64px);
+  --fs-3xl: clamp(64px, 7.5vw, 144px);
+
+  /* motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 150ms;
+  --t-med: 240ms;
+  --t-slow: 400ms;
+
+  /* hazard stripe, used sparingly as an edge detail */
+  --hazard: repeating-linear-gradient(-45deg, var(--volt) 0 10px, #15130c 10px 20px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-med: 0ms;
+    --t-slow: 0ms;
+  }
 }
