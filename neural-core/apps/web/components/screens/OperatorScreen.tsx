@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import type { FocusFrame, StationStatus } from "@neural-core/shared";
+import { BackupPanel } from "@/components/BackupPanel";
 import { Brand } from "@/components/Brand";
 import { Button } from "@/components/Button";
 import { Icon } from "@/components/Icon";
@@ -260,6 +261,8 @@ function Console({ pin, onLock }: { pin: string; onLock: () => void }) {
           </ul>
         </Panel>
       </div>
+
+      <BackupPanel />
 
       {toast && <div className={styles.toast}>{toast}</div>}
     </main>

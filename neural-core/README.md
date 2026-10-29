@@ -68,6 +68,15 @@ written to `data/ledger.jsonl` first, the leaderboard is served from it, and
 the online database is re-synced automatically when the connection returns.
 Leave `DATABASE_URL` empty to run fully offline.
 
+**Kiosk backup (24 h).** Each kiosk browser also keeps its own backup of
+name, roll number and score, for when Neon can't be reached. It is encrypted
+(AES-GCM; the key is a non-extractable browser key that can't be read out),
+never leaves that browser, and every entry deletes itself 24 hours after it
+was saved. View, download as CSV or delete it in the operator console
+(`/operator/`, bottom panel). Browsers only allow the encryption on
+`http://localhost` or HTTPS, so open the kiosk via localhost; elsewhere the
+backup switches itself off rather than store anything unencrypted.
+
 | Screen | URL (dev: port 3000, built: port 3001) |
 |---|---|
 | Kiosk N (remembered after the first visit) | `http://localhost:3000/?station=N` |

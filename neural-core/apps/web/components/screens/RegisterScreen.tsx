@@ -7,6 +7,7 @@ import { Panel } from "@/components/Panel";
 import { TopBar } from "@/components/TopBar";
 import { api, ApiError } from "@/lib/api";
 import { audio } from "@/lib/audio";
+import { backupPlayer } from "@/lib/localBackup";
 import { useIdleReset, useKiosk } from "@/lib/useKiosk";
 import type { SessionPlayer } from "@/lib/session";
 import k from "./Kiosk.module.css";
@@ -27,6 +28,7 @@ export function RegisterScreen() {
   });
 
   const proceed = async (player: SessionPlayer) => {
+    void backupPlayer(player.id, player.fullName, contact.trim());
     await api.assign(station, player.id);
     dispatch({ type: "REGISTERED", player });
     router.push("/setup/");

@@ -1,0 +1,40 @@
+.panel {
+  margin-top: var(--s-3);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  text-align: left;
+  padding: var(--s-1) var(--s-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.table td {
+  padding: 6px var(--s-2);
+  border-top: 1px solid var(--edge-mid);
+}
+
+.right {
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.muted {
+  color: var(--text-3);
+  font-size: 14px;
+}

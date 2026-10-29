@@ -10,6 +10,7 @@ import type { Arena, ArenaHud, ArenaResult } from "@/game/arena";
 import { api } from "@/lib/api";
 import { audio } from "@/lib/audio";
 import { useCommands, useLink, useMessages } from "@/lib/link";
+import { backupScore } from "@/lib/localBackup";
 import { submitRun } from "@/lib/pending";
 import { useKiosk } from "@/lib/useKiosk";
 import styles from "./PlayScreen.module.css";
@@ -91,8 +92,10 @@ export function PlayScreen() {
       if (finished.current || !run) return;
       finished.current = true;
       setStage("saving");
+      const playerId = session.player?.id;
       try {
-        await submitRun(run.runId, result, aborted);
+        const saved = await submitRun(run.runId, result, aborted);
+        if (playerId && !aborted) void backupScore(playerId, run.runId, saved.stats.score);
         if (aborted) {
           dispatch({ type: "RESET" });
           router.replace("/");
@@ -101,11 +104,13 @@ export function PlayScreen() {
           router.replace("/result/");
         }
       } catch (e) {
+        // Server unreachable: keep the kiosk's own score in the local backup.
+        if (playerId && !aborted) void backupScore(playerId, run.runId, result.clientScore);
         setError(e instanceof Error ? e.message : "Could not save the shift");
         setStage("error");
       }
     },
-    [run, dispatch, router],
+    [run, dispatch, router, session.player],
   );
 
   useCommands(station, (c) => {
