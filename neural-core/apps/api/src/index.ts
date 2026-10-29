@@ -26,7 +26,7 @@ if (env.DATABASE_URL) {
   store.onChange = (entry) => db.mirror(entry);
   void db.start();
 } else {
-  ctx.log("DATABASE_URL is empty: leaderboard served from the local ledger only");
+  ctx.log("DATABASE_URL is empty: leaderboard served from the local ledger only (see README: online leaderboard)");
 }
 
 const app = express();

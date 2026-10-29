@@ -39,6 +39,15 @@ create table if not exists runs (
 create index if not exists runs_leaderboard on runs (status, score desc, avg_focus desc, accuracy desc);
 `;
 
+/** Host name only, so the password in the URL never reaches the logs. */
+function safeHost(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "database";
+  }
+}
+
 /** Best valid run per player, ranked by score, then average focus, then accuracy. */
 const LEADERBOARD = /* sql */ `
 select * from (
@@ -80,14 +89,25 @@ export class LeaderboardDb {
   private retry: ReturnType<typeof setTimeout> | null = null;
   ready = false;
   lastError: string | null = null;
+  readonly host: string;
 
   constructor(
     url: string,
     private readonly store: Store,
     private readonly log: (m: string) => void,
   ) {
-    this.pool = new pg.Pool({ connectionString: url, max: 5, connectionTimeoutMillis: 3000 });
-    this.pool.on("error", (err) => this.fail(err));
+    this.pool = new pg.Pool({
+      // Hosted providers hand out "sslmode=require"; pg already enforces full certificate checks
+      // for it, so say so explicitly and skip pg's deprecation warning.
+      connectionString: url.replace(/sslmode=(require|prefer|verify-ca)\b/, "sslmode=verify-full"),
+      max: 4,
+      // Free cloud databases sleep when idle and take a few seconds to wake.
+      connectionTimeoutMillis: 15_000,
+      idleTimeoutMillis: 30_000,
+    });
+    // The provider may close idle connections; the pool replaces them, so this is not an outage.
+    this.pool.on("error", (err) => this.log(`postgres: idle connection dropped (${err.message})`));
+    this.host = safeHost(url);
   }
 
   async start(): Promise<void> {
@@ -107,7 +127,7 @@ export class LeaderboardDb {
       }
       this.ready = true;
       this.lastError = null;
-      this.log(`postgres: connected, synced ${this.store.players.size} players and ${this.store.runs.size} runs`);
+      this.log(`postgres: connected to ${this.host}, synced ${this.store.players.size} players and ${this.store.runs.size} runs`);
     } catch (err) {
       this.fail(err);
     }

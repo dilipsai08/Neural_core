@@ -19,37 +19,54 @@ BioAmp EXG Pill → Arduino UNO R4 (250 Hz) → USB → Node server (DSP → foc
 
 ## Run it locally
 
-Requirements: Node 20+, pnpm 9, and PostgreSQL 14+ (for the leaderboard).
+Requirements: Node 20+ and pnpm 9. The leaderboard database is online (free),
+so there is nothing to install for it.
 
-1. Install PostgreSQL and create the database once:
+```bash
+pnpm install
+cp .env.example .env     # Windows: copy .env.example .env
+pnpm dev                 # game on http://localhost:3000, server on http://localhost:3001
+```
 
-   ```bash
-   createdb -U postgres neural_core
+Or run the built version on a single port:
+
+```bash
+pnpm build
+pnpm start               # everything on http://localhost:3001
+```
+
+### Online leaderboard database (Neon, free)
+
+Players and runs are stored in a free hosted PostgreSQL database on
+[Neon](https://neon.tech) (no credit card needed).
+
+1. Sign up at <https://console.neon.tech> (GitHub or Google login works).
+2. **Create project** → name `neural-core`, Postgres version: default, region: closest to the venue (e.g. *AWS Asia Pacific (Singapore)* for India) → **Create**.
+3. On the project dashboard click **Connect**, keep database `neondb`, and copy the connection string. It looks like
+   `postgresql://neondb_owner:xxxx@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require`
+4. Paste it into `.env`:
    ```
-
-   On Windows use the PostgreSQL installer, then run the same command from the
-   "SQL Shell"/command prompt, or create `neural_core` in pgAdmin. Tables are
-   created automatically when the server starts.
-
-2. Configure and start:
-
-   ```bash
-   pnpm install
-   cp .env.example .env     # Windows: copy .env.example .env  ·  set DATABASE_URL, OPERATOR_PIN, STATIONS
-   pnpm dev                 # game on http://localhost:3000, server on http://localhost:3001
+   DATABASE_URL=postgresql://neondb_owner:xxxx@ep-xxxx-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
    ```
+5. `pnpm dev`. The server log shows `postgres: connected to ep-xxxx…neon.tech, synced …`. The `players` and `runs` tables are created automatically.
 
-   Or run the built version on a single port:
+**Where to see the data:** <https://console.neon.tech> → your project → **Tables**
+(sidebar) to browse `players` and `runs`, or **SQL Editor** to query, e.g.
 
-   ```bash
-   pnpm build
-   pnpm start               # everything on http://localhost:3001
-   ```
+```sql
+select p.full_name, r.score, r.avg_focus, r.accuracy, r.finished_at
+from runs r join players p on p.id = r.player_id
+where r.status = 'valid'
+order by r.score desc;
+```
 
-The server log shows `postgres: connected, synced …` when the database is
-reachable. If Postgres is down, the game keeps working: every run is still
-written to `data/ledger.jsonl`, the leaderboard is served from it, and the
-database is re-synced automatically when it comes back.
+`.env` is git-ignored, so the connection string (it contains the password)
+never gets committed. Share it with teammates privately.
+
+If the internet drops at the venue the game keeps working: every run is
+written to `data/ledger.jsonl` first, the leaderboard is served from it, and
+the online database is re-synced automatically when the connection returns.
+Leave `DATABASE_URL` empty to run fully offline.
 
 | Screen | URL (dev: port 3000, built: port 3001) |
 |---|---|
@@ -107,7 +124,7 @@ The current brief takes priority over the original spec:
 - **60-second** round (was 90 s). No practice round. Calibration is 20 s + 20 s.
 - **Electrical-zombie** theme and story replace the abstract shooting range.
 - **Focus-chain multipliers** ×1/2/3/5/8 for sustained focus replace the flat 1×/2×/3× tiers.
-- **PostgreSQL leaderboard plus a local ledger.** Players and runs are stored in PostgreSQL (`players`, `runs` tables), which serves the leaderboard. Every change is also appended to `data/ledger.jsonl` first, so a database outage never loses a run. CSV export is in the operator console.
+- **Online PostgreSQL leaderboard (Neon) plus a local ledger.** Players and runs are stored in a free hosted PostgreSQL database (`players`, `runs` tables), which serves the leaderboard. Every change is also appended to `data/ledger.jsonl` first, so a lost connection never loses a run. CSV export is in the operator console.
 - **Up to 3 ranked attempts** per player (configurable, `1` restores the original rule), best run ranked.
 - **Single process, single port:** the API serves the static Next export, so the venue runs one command.
 
