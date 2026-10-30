@@ -40,6 +40,7 @@ export class SerialSource implements FocusSource {
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private detectTimer: ReturnType<typeof setTimeout> | null = null;
   private startTimer: ReturnType<typeof setInterval> | null = null;
+  private watchdog: ReturnType<typeof setInterval> | null = null;
   private bauds: number[];
   private baudIndex = 0;
 
@@ -58,6 +59,7 @@ export class SerialSource implements FocusSource {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     if (this.detectTimer) clearTimeout(this.detectTimer);
     if (this.startTimer) clearInterval(this.startTimer);
+    if (this.watchdog) clearInterval(this.watchdog);
     const port = this.port;
     this.port = null;
     if (port?.isOpen) {
@@ -107,8 +109,12 @@ export class SerialSource implements FocusSource {
 
     let bytesIn = 0;
     let firstBytes = "";
+    let lastDataAt = Date.now();
+    let nudged = false;
     port.on("data", (chunk: Buffer) => {
       bytesIn += chunk.length;
+      lastDataAt = Date.now();
+      nudged = false;
       if (firstBytes.length < 48) firstBytes += chunk.subarray(0, 16).toString("hex").replace(/(..)/g, "$1 ");
       const out = decoder.push(chunk);
       if (decoder.protocol !== "unknown" && this.protocol === "unknown") {
@@ -147,6 +153,7 @@ export class SerialSource implements FocusSource {
       this.connected = false;
       if (this.detectTimer) clearTimeout(this.detectTimer);
       if (this.startTimer) clearInterval(this.startTimer);
+      if (this.watchdog) clearInterval(this.watchdog);
       if (!this.stopped) this.opts.log(`serial ${this.opts.path}: closed`);
       this.scheduleRetry();
     });
@@ -170,13 +177,23 @@ export class SerialSource implements FocusSource {
       // Native-USB boards (UNO R4 Minima) only transmit once the host raises DTR,
       // which the Arduino IDE and Chrome do automatically.
       port.set({ dtr: true, rts: true }, () => undefined);
-      // "START" makes the Chords firmware stream; "i" makes the Neural Core sketch reprint its header.
+      // "START" makes the Chords firmware stream (the Neural Core sketch streams anyway).
+      // Nothing else is sent: unknown commands can stall the Chords firmware.
       // Wait for the USB link to settle, then keep asking until data arrives.
       const poke = () => {
-        if (port.isOpen && this.protocol === "unknown") port.write("START\ni\n");
+        if (port.isOpen && this.protocol === "unknown") port.write("START\n");
       };
       setTimeout(poke, 400);
       this.startTimer = setInterval(poke, START_RETRY_MS);
+      // If a recognised stream goes quiet (the board stalled), ask it to start again.
+      if (this.watchdog) clearInterval(this.watchdog);
+      this.watchdog = setInterval(() => {
+        if (!port.isOpen || this.protocol === "unknown" || Date.now() - lastDataAt < 2000) return;
+        if (!nudged) this.opts.log(`serial ${this.opts.path}: no data for 2 s, sending START again`);
+        nudged = true;
+        lastDataAt = Date.now();
+        port.write("START\n");
+      }, 1000);
       this.detectTimer = setTimeout(() => {
         if (this.startTimer) clearInterval(this.startTimer);
         if (this.protocol !== "unknown" || this.stopped) return;
