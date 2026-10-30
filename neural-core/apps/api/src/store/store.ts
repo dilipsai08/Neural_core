@@ -244,7 +244,8 @@ export class Store {
     const best = new Map<number, StoredRun>();
     for (const r of this.runs.values()) {
       if (r.status !== "valid" || !r.stats || !r.finishedAt) continue;
-      if (this.frozenAt && r.finishedAt > this.frozenAt) continue;
+      // A run that finishes in the same millisecond as the freeze is after it.
+      if (this.frozenAt && r.finishedAt >= this.frozenAt) continue;
       const cur = best.get(r.playerId);
       if (!cur || compareRuns(r, cur) < 0) best.set(r.playerId, r);
     }

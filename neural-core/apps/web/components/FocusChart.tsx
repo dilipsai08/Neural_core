@@ -6,7 +6,7 @@ const H = 300;
 const PAD = { l: 40, r: 12, t: 12, b: 34 };
 
 /**
- * Focus over the 60 s shift. Shaded bands show where the chain multiplier was
+ * Focus over the 45 s shift. Shaded bands show where the chain multiplier was
  * running; ticks along the bottom mark kills (and breaches in red).
  */
 export function FocusChart({ focus, events }: { focus: FocusPoint[]; events: RunEvent[] }) {

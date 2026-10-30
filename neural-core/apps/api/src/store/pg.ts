@@ -58,7 +58,7 @@ select * from (
   from runs r
   join players p on p.id = r.player_id
   where r.status = 'valid' and r.score is not null
-    and ($1::timestamptz is null or r.finished_at <= $1)
+    and ($1::timestamptz is null or r.finished_at < $1)
   order by r.player_id, r.score desc, r.avg_focus desc, r.accuracy desc, r.id
 ) best
 order by score desc, avg_focus desc, accuracy desc, run_id

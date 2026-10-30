@@ -1,6 +1,7 @@
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { timingSafeEqual } from "node:crypto";
 import {
+  ATTEMPTS_PER_PLAYER,
   operatorCommandSchema,
   operatorFakeSchema,
   operatorFreezeSchema,
@@ -48,7 +49,7 @@ export function operatorRouter(ctx: AppContext): Router {
         database: ctx.db ? (ctx.db.ready ? "connected" : "unavailable") : "disabled",
         logs: ctx.logs.slice(-60),
         players: store.players.size,
-        attemptsAllowed: ctx.env.ATTEMPTS_PER_PLAYER,
+        attemptsAllowed: ATTEMPTS_PER_PLAYER,
       });
     }),
   );

@@ -29,7 +29,7 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemySpec>> = {
   sparker: { kind: "sparker", hp: 1, points: 150, crossS: 7, scale: 0.85 },
   brute: { kind: "brute", hp: 3, points: 300, crossS: 14, scale: 1.45 },
   wraith: { kind: "wraith", hp: 1, points: 200, crossS: 9.5, scale: 1.05 },
-  conductor: { kind: "conductor", hp: 14, points: 1500, crossS: 18, scale: 2.4 },
+  conductor: { kind: "conductor", hp: 12, points: 1500, crossS: 13.5, scale: 2.4 },
 };
 
 export const LANE_COUNT = 3;
@@ -41,18 +41,18 @@ interface Phase {
   pairChance: number;
 }
 
-/** Act structure of the 60 s round: Brownout → Surge → Overload → The Conductor. */
+/** Act structure of the 45 s round: Brownout → Surge → Overload → The Conductor. */
 const PHASES: readonly Phase[] = [
-  { until: 14, interval: 2.1, weights: { shambler: 0.85, wraith: 0.15 }, pairChance: 0 },
-  { until: 28, interval: 1.55, weights: { shambler: 0.5, sparker: 0.35, wraith: 0.15 }, pairChance: 0.15 },
-  { until: 41, interval: 1.3, weights: { shambler: 0.35, sparker: 0.3, brute: 0.2, wraith: 0.15 }, pairChance: 0.25 },
+  { until: 11, interval: 1.9, weights: { shambler: 0.85, wraith: 0.15 }, pairChance: 0 },
+  { until: 22, interval: 1.45, weights: { shambler: 0.5, sparker: 0.35, wraith: 0.15 }, pairChance: 0.15 },
+  { until: BOSS_SPAWN_S, interval: 1.25, weights: { shambler: 0.35, sparker: 0.3, brute: 0.2, wraith: 0.15 }, pairChance: 0.25 },
   { until: ROUND_DURATION_S, interval: 2.0, weights: { shambler: 0.45, sparker: 0.4, wraith: 0.15 }, pairChance: 0.1 },
 ];
 
 export const ACTS = [
   { at: 0, name: "Brownout" },
-  { at: 14, name: "Surge" },
-  { at: 28, name: "Overload" },
+  { at: 11, name: "Surge" },
+  { at: 22, name: "Overload" },
   { at: BOSS_SPAWN_S, name: "The Conductor" },
 ] as const;
 
@@ -110,7 +110,7 @@ export function distortionFor(focus: number): number {
  * steady walk when the player is distracted. Bounded so crossings stay within
  * the server's verification tolerance and targets stay catchable.
  */
-export const MAX_PROGRESS_WOBBLE = 0.06;
+export const MAX_PROGRESS_WOBBLE = 0.12;
 
 // ─── Focus chain (sustained-focus multiplier) ─────────────────────────
 export function multiplierForChain(sustainedS: number): number {
@@ -340,9 +340,9 @@ export function scoreRun({ seed, events, focus }: ScoreInput): ScoreOutput {
 // ─── Titles & story chapters ──────────────────────────────────────────
 export const RANK_TITLES: readonly (RankTitle & { minScore: number })[] = [
   { id: "fuse-runner", label: "Fuse Runner", chapter: 1, minScore: 0 },
-  { id: "lineworker", label: "Lineworker", chapter: 2, minScore: 5000 },
-  { id: "arc-warden", label: "Arc Warden", chapter: 3, minScore: 12000 },
-  { id: "grid-saint", label: "Grid Saint", chapter: 4, minScore: 22000 },
+  { id: "lineworker", label: "Lineworker", chapter: 2, minScore: 3800 },
+  { id: "arc-warden", label: "Arc Warden", chapter: 3, minScore: 9000 },
+  { id: "grid-saint", label: "Grid Saint", chapter: 4, minScore: 16500 },
 ];
 
 export function titleForScore(score: number): RankTitle {

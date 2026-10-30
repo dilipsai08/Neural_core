@@ -6,7 +6,7 @@ over USB, filters the EEG and turns it into a focus percentage in real time.
 
 ```
 Electrodes → BioAmp EXG Pill → Arduino UNO R4 (A0) → USB cable
-  → game server: reads Chords packets, filters 0.5–45 Hz + 50 Hz notch,
+  → game server: reads Chords packets, filters 0.5–45 Hz + 50/100 Hz notches, removes spikes,
     measures theta/alpha/beta, engagement = beta / (alpha + theta),
     maps it to 0–100 % with your calibration (4 times a second)
   → game: low focus = shaking, blurring, lurching zombies;
@@ -120,7 +120,7 @@ Now run it with a personal calibration, which is what the game does too:
 pnpm sensor:check --port COM5 --baud 230400 --rate 500 --calibrate
 ```
 
-Follow the prompts: **20 s relax** (slow breathing), then **20 s focus** (count
+Follow the prompts: **15 s relax** (slow breathing), then **15 s focus** (count
 down in sevens). After that it prints your range, e.g.
 `your range: index 0.31 (relaxed) → 1.12 (focused)`, and the live focus % uses it.
 Relaxing should bring the bar down, and doing arithmetic should push it up.
@@ -174,19 +174,20 @@ You can also switch sources without restarting: open `http://localhost:3000/oper
    - *Jaw relaxed*: little muscle noise
 
    The needle on the right is your live focus.
-4. **Calibrate**: 20 s relax with the breathing beacon, then 20 s counting down
+4. **Calibrate**: 15 s relax with the breathing beacon, then 15 s counting down
    from 100 in sevens. This sets *your* personal 0–100 % scale.
 5. **Play.** The focus gauge at the bottom is your live score, and the enemies react to it:
 
    | Your focus | What the zombies do | Points |
    |---|---|---|
-   | 72 %+ (locked in) | Walk steadily and crisply, easy to hit | chain grows |
-   | 35–72 % (drifting) | Start to tremble, wander in depth, speed up and slow down | |
-   | under 35 % (scattered) | Shake hard, lurch, glitch-jump, leave blur trails; wraiths fade out; the picture smears | chain breaks |
+   | 60 %+ (focused) | Walk at a fixed speed on their lane, crisp and still: easy to hit | chain grows |
+   | 30–60 % (drifting) | Tremble, wander in depth, speed up and slow down; the edges blur | |
+   | under 30 % (scattered) | Shake hard, hop, glitch-jump sideways and flicker, leave blur trails; wraiths fade out; the whole picture smears | chain breaks |
    | ≥ 60 % held for 4 / 9 / 15 / 23 s | | ×2 / ×3 (kills arc to the next zombie) / ×5 / ×8 |
 
    Changes are smoothed over about a second, so they feel gradual rather than jumpy.
-6. After 60 s you get your score, rank, and a chart of your focus over the shift.
+6. After 45 s you get your score card (15 s, or press **Skip**), then tonight's top 3,
+   then the kiosk goes back to the home screen. Each registration plays once.
 
 **Tips for a strong, readable signal while playing:** keep your head still and
 look at the screen rather than around it. Breathe out slowly when the zombies
@@ -235,7 +236,8 @@ talking to each other; use a phone hotspot instead.
 | Quality **BAD**, waveform flat or clipped | Electrode off the skin, cable clip loose, or VCC/GND/OUT wiring. Reseat everything |
 | Quality **FAIR** in the terminal / "Signal noisy" in the game, "Low mains hum" unchecked | Unplug the laptop charger, move away from power strips |
 | `BAD` with beta near 100 % and a huge `idx` | Wrong sample rate: set `--rate 500` / `SERIAL_RATE=500` for the Chords sketch. Run `pnpm sensor:check --port COM5 --raw` to see packets/s |
-| Focus stuck near 0 % or 100 % | Recalibrate (results screen → Recalibrate, or `--calibrate` in the terminal) |
+| Focus stuck near 0 % or 100 % | Re-seat the electrodes and recalibrate (`--calibrate` in the terminal; in the game, calibration runs before the shift) |
+| Focus jumps around in a noisy hall | Keep the BioAmp cable short and away from power strips, phones and the laptop charger; twist the three leads together; run on battery. The server already drops spikes, notches 50/100 Hz and holds the score while the signal is bad |
 | Focus jumps on every blink | Normal on the forehead; the game holds the score through blinks. Soft eyes help |
 | Game pauses with "Headset signal lost" | No data for 2.5 s (cable pulled or the port closed). It resumes by itself when data returns |
 | No hardware today | `.env`: `STATIONS=1=fake`, or operator console → Station → **fake**, with a slider to fake focus |

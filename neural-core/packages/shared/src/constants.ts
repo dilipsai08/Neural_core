@@ -44,8 +44,8 @@ export const QUALITY_MAINS_RATIO_FAIR = 0.6;
 /** No samples for this long → source considered disconnected. */
 export const SOURCE_STALE_MS = 1500;
 
-export const CALIBRATION_RELAX_S = 20;
-export const CALIBRATION_FOCUS_S = 20;
+export const CALIBRATION_RELAX_S = 15;
+export const CALIBRATION_FOCUS_S = 15;
 export const CALIBRATION_LOW_PERCENTILE = 0.1;
 export const CALIBRATION_HIGH_PERCENTILE = 0.9;
 /** Used when calibration is skipped and no earlier calibration exists today. */
@@ -54,7 +54,7 @@ export const DEFAULT_CALIBRATION = { low: 0.35, high: 1.25 } as const;
 export const CALIBRATION_MIN_SPAN = 0.08;
 
 // ─── Game: "Substation 07" ─────────────────────────────────────────────
-export const ROUND_DURATION_S = 60;
+export const ROUND_DURATION_S = 45;
 export const SIM_HZ = 60;
 export const BRIEFING_S = 9;
 export const COUNTDOWN_S = 3;
@@ -77,18 +77,18 @@ export const ARC_MIN_MULT = 3;
 export const ARC_FORK_MULT = 5;
 
 /** Focus below which enemies start to destabilise; 0 distortion at/above. */
-export const DISTORTION_FOCUS_CLEAN = 72;
+export const DISTORTION_FOCUS_CLEAN = 60;
 /** Focus at/below which distortion reaches its cap. */
-export const DISTORTION_FOCUS_MAX = 15;
+export const DISTORTION_FOCUS_MAX = 30;
 /** Distortion is capped so a target is always hittable. */
-export const DISTORTION_CAP = 0.9;
+export const DISTORTION_CAP = 1;
 /** Client-side smoothing time constant for distortion changes (seconds). */
 export const DISTORTION_TAU_S = 0.8;
 
 export const BREACH_PENALTY = 100;
 /** Boss shield drops when the chain multiplier is at least this. */
 export const BOSS_SHIELD_MULT = 2;
-export const BOSS_SPAWN_S = 41;
+export const BOSS_SPAWN_S = 31;
 
 /** If no focus frame arrives for this long mid-round, the round pauses. */
 export const SIGNAL_LOSS_PAUSE_MS = 2500;
@@ -100,6 +100,11 @@ export const DISPLAY_ID_PREFIX = "NC-";
 export const FOCUS_SAMPLE_STORAGE_HZ = 4;
 export const MAX_STATIONS = 8;
 /** Kill timing tolerance used by the server when verifying a run. */
-export const VERIFY_TIME_TOLERANCE_S = 1.5;
+export const VERIFY_TIME_TOLERANCE_S = 2;
+/** One scored game per registration (an operator "redo" gives it back). */
+export const ATTEMPTS_PER_PLAYER = 1;
+/** End-of-game flow: score card, then tonight's top 3, then home. */
+export const RESULT_CARD_S = 15;
+export const TOP3_SHOW_S = 10;
 /** Server-held focus history per station (seconds). */
 export const FOCUS_HISTORY_S = 600;

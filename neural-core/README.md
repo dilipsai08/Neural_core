@@ -6,8 +6,8 @@ concentration into a 0–100 focus score in real time. Zombies charged with
 stray current walk across a rain-soaked street toward the last live
 substation. You fire the arc with the mouse. **When your mind wanders the
 zombies shake, blur, lurch and glitch. When you stay focused they steady and
-your kills chain ×2 → ×3 → ×5 → ×8.** Every shift lasts exactly 60 seconds, and
-you can't die.
+your kills chain ×2 → ×3 → ×5 → ×8.** Every shift lasts exactly 45 seconds, each
+registration plays once, and you can't die.
 
 ```
 BioAmp EXG Pill → Arduino UNO R4 (250 Hz) → USB → Node server (DSP → focus score)
@@ -121,21 +121,21 @@ docs            Hardware → game roadmap
 | | |
 |---|---|
 | Story | The Neural Core, a city-wide brain-computer grid, fed back at 23:14. The dead walk on stray current toward Substation 07. A calm human mind jams their signal, which is why the emitter runs on your headset. |
-| Acts | Brownout (0–14 s), Surge (14–28 s), Overload (28–41 s), The Conductor (41–60 s) |
+| Acts | Brownout (0–11 s), Surge (11–22 s), Overload (22–31 s), The Conductor (31–45 s) |
 | Enemies | Shambler, Sparker (fast), Brute (3 hits), Wraith (fades when you drift), the Conductor (boss; shielded until you hold a ×2 chain) |
 | Score | base × focus-chain multiplier; −100 per breach; ties broken by average focus, then accuracy |
-| Replay loop | 3 ranked shifts per player (`ATTEMPTS_PER_PLAYER`), best one counts, encore shifts after that; rank titles unlock four story logs; the result screen shows the gap to the next place |
+| After the shift | One game per registration. The score card shows for 15 s (Skip to move on), an arc wipe reveals tonight's top 3 for 10 s, then the kiosk returns to the home screen. Rank titles unlock four story logs |
 | Fairness | Same seeded wave for everyone; the server re-scores every run from the focus frames it actually sent |
 
 ## Decisions that supersede `info.md`
 
 The current brief takes priority over the original spec:
 
-- **60-second** round (was 90 s). No practice round. Calibration is 20 s + 20 s.
+- **45-second** round (was 90 s). No practice round. Calibration is 15 s relax + 15 s focus.
 - **Electrical-zombie** theme and story replace the abstract shooting range.
 - **Focus-chain multipliers** ×1/2/3/5/8 for sustained focus replace the flat 1×/2×/3× tiers.
 - **Online PostgreSQL leaderboard (Neon) plus a local ledger.** Players and runs are stored in a free hosted PostgreSQL database (`players`, `runs` tables), which serves the leaderboard. Every change is also appended to `data/ledger.jsonl` first, so a lost connection never loses a run. CSV export is in the operator console.
-- **Up to 3 ranked attempts** per player (configurable, `1` restores the original rule), best run ranked.
+- **One game per registration.** The server refuses a second run for the same player (`ALREADY_PLAYED`); a volunteer can give the attempt back with "redo" in the operator console. `ATTEMPTS_PER_PLAYER` in an old `.env` is ignored.
 - **Single process, single port:** the API serves the static Next export, so the venue runs one command.
 
 The focus score is a relative game metric, not a medical measurement.

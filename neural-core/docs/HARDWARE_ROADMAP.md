@@ -29,7 +29,7 @@ zombies on screen, and how to build, test and run that link at the event.
    │ raw ADC counts (bridges batch 10 samples per WebSocket message)
    ▼
  Neural Core server (Node)  apps/api/src/sensor
-   1. band-pass 0.5–45 Hz + 50 Hz notch          (biquads)
+   1. spike removal, band-pass 0.5–45 Hz, 50 Hz ×2 + 100 Hz notches (biquads)
    2. 2 s window, 0.25 s hop, Welch PSD           (Hann, 1 s segments, FFT 256)
    3. theta / alpha / beta / 30–45 Hz power
    4. engagement index = beta / (alpha + theta)
@@ -162,12 +162,18 @@ All constants live in `packages/shared/src/constants.ts`.
 
 1. **Centre and filter.** Subtract mid-scale, then a 2nd-order high-pass at
    0.5 Hz (removes electrode drift), two 2nd-order low-pass stages at 45 Hz,
-   and a Q=30 notch at 50 Hz (`MAINS_HZ=60` for 60 Hz countries). The output
-   is held for 1.5 s while the filters settle.
+   two cascaded notches at 50 Hz (Q 20 and 35, so a drifting venue mains is
+   still caught) plus one at 100 Hz, its first harmonic (`MAINS_HZ=60` for
+   60 Hz countries). The output is held for 1.5 s while the filters settle.
+   **Before** the filters, a sample that jumps more than 8× the recent noise
+   level away from the median of the last 5 samples (a static discharge, a
+   cable knock, a phone transmitting next to the leads) is replaced by that
+   median, so the filters never ring on it.
 2. **Window.** Keep the last 2 s (500 samples). Every 0.25 s (62 samples) run
    an analysis, giving 4 frames per second.
-3. **Spectrum.** Welch's method: 1 s Hann segments with 50% overlap,
-   zero-padded to a 256-point FFT, averaged.
+3. **Spectrum.** Each 2 s window is clipped to median ± 5 robust std-devs
+   (any surviving impulse cannot flood every band), then Welch's method: 1 s
+   Hann segments with 50% overlap, zero-padded to a 256-point FFT, averaged.
 4. **Bands.** theta 4–8, alpha 8–13, beta 13–30, "muscle" 30–45 Hz.
 5. **Engagement index** `beta / (alpha + theta)`. Rises with task
    engagement and falls with relaxation or drowsiness.
@@ -181,8 +187,10 @@ All constants live in `packages/shared/src/constants.ts`.
    (the EEG is unusable). Strong 50 Hz mains hum alone is `fair`: the notch
    removes it, so it warns instead of blocking. Otherwise `good`. The headset
    screen only lets a player continue on `good` (a volunteer override appears
-   after 20 s).
-8. **Calibration** (20 s relax with the breathing beacon, then 20 s focus by
+   after 20 s). While quality is `bad` the focus score is **held** at its last
+   value instead of following garbage, and the index fed to the score is the
+   median of the last 5 windows, so one noisy window cannot move it.
+8. **Calibration** (15 s relax with the breathing beacon, then 15 s focus by
    counting down from 100 in sevens). Windows with artifacts or bad quality are
    dropped. `low` = 10th percentile of relax, `high` = 90th percentile of focus.
    If those don't separate, the player's own 10th–90th range over both phases
@@ -219,17 +227,21 @@ never yanks the targets around.
 ### 6.1 Distortion: what a wandering mind does to the zombies
 
 ```
-distortion d = smoothstep((72 − focus) / (72 − 15)) × 0.9      // 0 when focus ≥ 72
+distortion d = smoothstep((60 − focus) / (60 − 30))             // 0 when focus ≥ 60, 1 at ≤ 30
 d_display   += (d − d_display) × (1 − e^(−dt/0.8 s))           // no sudden jumps
 ```
 
+At focus ≥ 60 every zombie walks at its fixed speed along its lane, with no
+shake or blur. Below 30 it is as chaotic as the game gets.
+
 | Effect | Formula / behaviour | Cap |
 |---|---|---|
-| **Speed surges and stalls** | progress = steady walk + `d × 0.06 × fbm(seed, t)` | ±6% of the crossing, so the average speed stays fixed and verification still works |
-| **Lateral tremor** | `x += d × 0.28 × noise(seed, 9t)` | 0.25 m |
-| **Depth wander** | `z += d × 1.5 × fbm(seed, 1.1t)` across the lane | 1.35 m |
-| **Glitch jumps** | above d = 0.45, short teleport steps plus flicker | 1 m |
-| **Blur** | motion trails (after-image) and an edge-weighted radial blur | trails damp ≤ 0.86 |
+| **Speed surges and stalls** | progress = steady walk + `d × 0.12 × fbm(seed, 1.4t)` | ±12% of the crossing, so the average speed stays fixed and verification still works |
+| **Lateral tremor** | `x += d(0.35 + 0.6d) × noise(seed, 11t) + 0.9d × fbm(seed, 2.6t)` | ≈ 1.6 m |
+| **Depth wander** | `z += 2.4d × fbm(seed, 1.6t)` plus a fast shake | ≈ 2.6 m |
+| **Hops** | `y = 0.35d × noise(seed, 7t)` | 0.35 m |
+| **Glitch jumps** | above d = 0.3, more often as d rises: 2.2d m sideways teleports with flicker | 2.2 m |
+| **Blur** | motion trails (after-image), a whole-screen radial blur that is strongest at the edges, chromatic split | trails damp ≤ 0.9 |
 | **Lens** | chromatic split, desaturation, static grain, rolling bars, vignette | — |
 | **Wraiths** | opacity `0.1 + 0.85 × (1 − d/0.85)`: they fade out when you drift | never fully invisible |
 | **Crosshair** | ring opens with d; red dashed when scattered, arc-blue when locked | — |
@@ -259,7 +271,7 @@ frames, so the multiplier on screen is the one the server pays out.
 - Points per kill: `base(enemy) × multiplier at that moment`. Shambler 100,
   Sparker 150, Wraith 200, Brute 300 (3 hits), Conductor 1500 (14 hits, shielded).
 - Breach (a zombie reaches the gate): −100 points. **You can't die**: every
-  shift runs the full 60 seconds.
+  shift runs the full 45 seconds. One game per registration.
 - The same seeded wave (`EVENT_SEED`) for everyone, so skill and focus decide
   the board.
 - **Server verification**: the kiosk submits its events and the focus frames
@@ -294,7 +306,7 @@ Automated checks: `pnpm test` (DSP, scoring, RNG, store), `pnpm typecheck`, `pnp
 ## 8. Event-day checklist
 
 - [ ] Server laptop on mains power; kiosk laptops **on battery** during play.
-- [ ] `.env`: `OPERATOR_PIN`, `STATIONS`, `EVENT_NAME`, `ATTEMPTS_PER_PLAYER`.
+- [ ] `.env`: `OPERATOR_PIN`, `STATIONS`, `EVENT_NAME`.
 - [ ] `pnpm build` done the day before. At the venue just run `pnpm start` (fully offline).
 - [ ] Chrome kiosk mode: `chrome --kiosk --autoplay-policy=no-user-gesture-required http://SERVER:3001/?station=N`.
 - [ ] Projector on `/leaderboard/`. Operator device unlocked on `/operator/`.
@@ -322,7 +334,7 @@ Automated checks: `pnpm test` (DSP, scoring, RNG, store), `pnpm typecheck`, `pnp
 
 ## 10. Next steps after the event
 
-- Per-player adaptive normalisation (rolling percentiles) to cut calibration to 20 s.
+- Per-player adaptive normalisation (rolling percentiles) to cut calibration below 15 s.
 - Second channel (Fp2) and frontal alpha asymmetry as an extra "calm" signal.
 - Use the recorded CSVs to fit `TENSION_RATIO` and `BLINK_SIGMA` from real data.
 - A head-to-head mode for two stations, with the same wave mirrored.

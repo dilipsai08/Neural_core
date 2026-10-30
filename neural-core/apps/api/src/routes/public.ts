@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import {
+  ATTEMPTS_PER_PLAYER,
   ATTRACT_TOP_N,
   calibrationStartSchema,
   finishRunSchema,
@@ -135,7 +136,7 @@ export function publicRouter(ctx: AppContext): Router {
       res.json({
         ...player,
         attemptsUsed: store.rankedAttempts(player.id),
-        attemptsAllowed: env.ATTEMPTS_PER_PLAYER,
+        attemptsAllowed: ATTEMPTS_PER_PLAYER,
         personalBest: store.personalBest(player.id),
       });
     }),
@@ -154,8 +155,11 @@ export function publicRouter(ctx: AppContext): Router {
       }
       station.assignPlayer(body.playerId);
       const calibration = station.currentCalibration() ?? station.skipCalibration();
-      const encore = store.rankedAttempts(body.playerId) >= env.ATTEMPTS_PER_PLAYER;
-      const run = store.startRun({ playerId: body.playerId, station: body.station, seed: env.EVENT_SEED, calibration, encore });
+      // One scored game per registration. An operator "redo" frees the attempt again.
+      if (store.rankedAttempts(body.playerId) >= ATTEMPTS_PER_PLAYER) {
+        throw new HttpError(409, "ALREADY_PLAYED", "This player has already played. Each registration gets one game.");
+      }
+      const run = store.startRun({ playerId: body.playerId, station: body.station, seed: env.EVENT_SEED, calibration, encore: false });
       station.runId = run.id;
       station.paused = false;
       station.broadcastStatus();
@@ -258,7 +262,7 @@ export function publicRouter(ctx: AppContext): Router {
         personalBest: store.personalBest(player.id, run.id),
         nextAbove,
         attemptsUsed: store.rankedAttempts(player.id),
-        attemptsAllowed: env.ATTEMPTS_PER_PLAYER,
+        attemptsAllowed: ATTEMPTS_PER_PLAYER,
       };
       res.json(result);
     }),

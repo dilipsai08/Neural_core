@@ -100,11 +100,11 @@ interface Enemy {
 }
 
 const RADIO: Array<{ at: number; from: string; text: string }> = [
-  { at: 0.4, from: "Control", text: "Grid reboot started. Sixty seconds. Keep them off the gate." },
-  { at: 14, from: "Control", text: "Reboot at 25%. Sparkers on the line. They run fast, so lead your shots." },
-  { at: 28, from: "Control", text: "Halfway. Brutes inbound, three hits each. Keep your mind quiet." },
+  { at: 0.4, from: "Control", text: "Grid reboot started. Forty-five seconds. Keep them off the gate." },
+  { at: 11, from: "Control", text: "Reboot at 25%. Sparkers on the line. They run fast, so lead your shots." },
+  { at: 22, from: "Control", text: "Halfway. Brutes inbound, three hits each. Keep your mind quiet." },
   { at: BOSS_SPAWN_S - 0.5, from: "Control", text: "Something big is pulling the whole grid. The Conductor. Its shield drops when you hold a ×2 chain." },
-  { at: 54, from: "Control", text: "Six seconds. Hold the line!" },
+  { at: ROUND_DURATION_S - 6, from: "Control", text: "Six seconds. Hold the line!" },
 ];
 
 const SHIELD_VERT = /* glsl */ `
@@ -548,35 +548,39 @@ export class Arena {
   }
 
   /**
-   * Steady left-to-right walk; focus decides how it looks. Distraction adds a
-   * bounded surge/stall (random-feeling speed), depth wander, tremor and glitch
-   * jumps. All of it is smooth seeded noise, so it is the same for everyone.
+   * Steady left-to-right walk; focus decides how it looks. At good focus
+   * (distortion 0) every enemy walks at its fixed speed on its lane. As focus
+   * drops, distraction adds a bounded surge/stall (random-feeling speed),
+   * depth wander, hard tremor, hops and glitch jumps that make them hard to
+   * hit. All of it is smooth seeded noise, so it is the same for everyone.
    */
   private moveEnemy(e: Enemy, clock: number): void {
     const s = e.spawn;
     const d = this.distortion;
     const seed = s.noiseSeed;
     const base = (clock - s.t) / s.crossS;
-    const p = base + d * MAX_PROGRESS_WOBBLE * fbm1(seed, clock * 0.9);
+    const p = base + d * MAX_PROGRESS_WOBBLE * fbm1(seed, clock * 1.4);
     const x0 = this.laneStart[s.lane] ?? -14;
     let x = x0 + (this.laneEnd - x0) * p;
-    x += d * 0.28 * noise1(seed + 13, clock * 9) - e.knock;
-    let z = (LANES_Z[s.lane] ?? 0) + d * 1.5 * fbm1(seed + 7, clock * 1.1);
-    const y = d * 0.14 * Math.max(0, noise1(seed + 21, clock * 6));
+    // Tremor grows faster than linearly, so drifting is a wobble and scattered is a shake.
+    const shake = d * (0.35 + 0.6 * d);
+    x += shake * noise1(seed + 13, clock * 11) + d * 0.9 * fbm1(seed + 17, clock * 2.6) - e.knock;
+    let z = (LANES_Z[s.lane] ?? 0) + d * 2.4 * fbm1(seed + 7, clock * 1.6) + shake * 0.4 * noise1(seed + 19, clock * 10);
+    const y = d * 0.35 * Math.max(0, noise1(seed + 21, clock * 7));
     let glitch = false;
-    if (d > 0.45 && s.kind !== "conductor") {
-      const g = noise1(seed + 29, clock * 2.4);
-      if (g > 0.55) {
+    if (d > 0.3 && s.kind !== "conductor") {
+      const g = noise1(seed + 29, clock * 3.2);
+      if (g > 0.75 - 0.4 * d) {
         glitch = true;
-        x += Math.sign(noise1(seed + 31, Math.floor(clock * 5))) * 1.1 * d;
-        z += noise1(seed + 37, Math.floor(clock * 5)) * 0.8 * d;
+        x += Math.sign(noise1(seed + 31, Math.floor(clock * 6))) * 2.2 * d;
+        z += noise1(seed + 37, Math.floor(clock * 6)) * 1.4 * d;
       }
     }
     e.knock = Math.max(0, e.knock - 0.03);
     e.x = x;
     e.z = z;
     e.y = y;
-    e.rig.root.visible = !glitch || Math.floor(this.wall * 24) % 3 !== 0;
+    e.rig.root.visible = !glitch || Math.floor(this.wall * 24) % (d > 0.7 ? 2 : 3) !== 0;
 
     if (s.kind === "wraith") e.rig.setOpacity(0.1 + 0.85 * Math.max(0, 1 - d / 0.85));
 
@@ -818,7 +822,7 @@ export class Arena {
     const sy = Math.sin(this.wall * 0.23) * sway * 0.3 + (this.shake > 0 ? fxr(-0.5, 0.5) * this.shake * 0.25 : 0);
     this.camera.position.set(sx, 4.4 + sy, 16);
     this.camera.lookAt(sx * 0.4, 1.4, -2);
-    this.camera.rotation.z += Math.sin(this.wall * 1.7) * d * d * 0.012;
+    this.camera.rotation.z += Math.sin(this.wall * 1.7) * d * d * 0.02;
 
     this.fx.update(this.wall, this.mode === "attract" ? 0.08 : d, locked, this.alarm);
     this.fx.render();

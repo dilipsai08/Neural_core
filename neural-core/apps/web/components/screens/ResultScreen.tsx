@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { nextTitle, type RunResult } from "@neural-core/shared";
+import { nextTitle, RESULT_CARD_S, TOP3_SHOW_S, type LeaderboardEntry, type RunResult } from "@neural-core/shared";
 import { Brand } from "@/components/Brand";
 import { Button } from "@/components/Button";
 import { FocusChart } from "@/components/FocusChart";
 import { Icon } from "@/components/Icon";
+import { Leaderboard } from "@/components/Leaderboard";
 import { Panel } from "@/components/Panel";
 import { api } from "@/lib/api";
-import { audio } from "@/lib/audio";
 import { LORE } from "@/lib/lore";
 import { flushPendingRuns } from "@/lib/pending";
 import { useIdleReset, useKiosk } from "@/lib/useKiosk";
@@ -34,10 +34,35 @@ function useCountUp(target: number, ms = 1400): number {
   return v;
 }
 
+/** Whole seconds left on a countdown that only runs while `running` is true. */
+function useCountdown(seconds: number, running: boolean, onDone: () => void): number {
+  const [left, setLeft] = useState(seconds);
+  useEffect(() => {
+    if (!running) return;
+    setLeft(seconds);
+    const end = Date.now() + seconds * 1000;
+    const id = setInterval(() => {
+      const s = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      setLeft(s);
+      if (s === 0) {
+        clearInterval(id);
+        onDone();
+      }
+    }, 250);
+    return () => clearInterval(id);
+  }, [seconds, running, onDone]);
+  return left;
+}
+
+/** After the shift: score card (skippable) → arc transition → tonight's top 3 → home. */
+type Stage = "card" | "leaving" | "top3";
+
 export function ResultScreen() {
   const { router, session, dispatch, hydrated } = useKiosk();
   const [result, setResult] = useState<RunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stage, setStage] = useState<Stage>("card");
+  const [top, setTop] = useState<LeaderboardEntry[] | null>(null);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -58,6 +83,24 @@ export function ResultScreen() {
   }, [dispatch, router]);
 
   useIdleReset(75, done);
+
+  const toTop3 = useCallback(() => {
+    setStage((st) => (st === "card" ? "leaving" : st));
+    // Fetch now so the board is ready when the arc sweep finishes.
+    api
+      .leaderboard(3)
+      .then((r) => setTop(r.entries))
+      .catch(() => setTop([]));
+  }, []);
+
+  useEffect(() => {
+    if (stage !== "leaving") return;
+    const t = setTimeout(() => setStage("top3"), 900);
+    return () => clearTimeout(t);
+  }, [stage]);
+
+  const cardLeft = useCountdown(RESULT_CARD_S, stage === "card" && !!result?.run.stats, toTop3);
+  const homeLeft = useCountdown(TOP3_SHOW_S, stage === "top3", done);
 
   const score = useCountUp(result?.run.stats?.score ?? 0);
   if (error) {
@@ -87,17 +130,55 @@ export function ResultScreen() {
   const upcoming = nextTitle(s.score);
   const lore = LORE.filter((l) => l.chapter <= result.title.chapter);
   const newest = lore[lore.length - 1]!;
-  const attemptsLeft = Math.max(0, result.attemptsAllowed - result.attemptsUsed);
   const gap = result.nextAbove ? result.nextAbove.score - s.score : null;
 
-  const again = () => {
-    audio.unlock();
-    dispatch({ type: "PLAY_AGAIN" });
-    router.push("/play/");
-  };
+  if (stage === "top3") {
+    const inTop = top?.some((e) => e.runId === result.run.id) ?? false;
+    return (
+      <main className={`${styles.screen} ${styles.podiumScreen}`}>
+        <header className={styles.top}>
+          <Brand />
+          <span className="label">Tonight’s grid · top 3</span>
+        </header>
+        <section className={styles.podium}>
+          <span className="label">Substation 07 · shift log</span>
+          <h1 className={styles.podiumTitle}>Top 3 tonight</h1>
+          {top === null ? (
+            <p className="label">Reading the board…</p>
+          ) : (
+            <Leaderboard entries={top} size="xl" highlight={result.player.id} empty="The board is empty. Yours is the first shift." />
+          )}
+          <p className={styles.podiumYou}>
+            {inTop ? (
+              <>You made the top 3, {result.player.fullName}. The grid remembers.</>
+            ) : (
+              <>
+                {result.player.fullName}: <span className="num">{s.score.toLocaleString("en-IN")}</span> pts
+                {result.rank !== null && (
+                  <>
+                    {" "}
+                    · <span className="num">#{result.rank}</span> of {result.totalRanked}
+                  </>
+                )}
+              </>
+            )}
+          </p>
+        </section>
+        <footer className={styles.actions}>
+          <span className={styles.note}>Focus is a relative game score, not a medical measurement.</span>
+          <span className={styles.spacer} />
+          <Countdown left={homeLeft} total={TOP3_SHOW_S} label="Back to start in" />
+          <Button variant="primary" size="lg" iconAfter="arrowRight" onClick={done}>
+            Finish
+          </Button>
+        </footer>
+      </main>
+    );
+  }
 
   return (
-    <main className={styles.screen}>
+    <main className={styles.screen} data-leaving={stage === "leaving"}>
+      {stage === "leaving" && <div className={styles.sweep} aria-hidden="true" />}
       <header className={styles.top}>
         <Brand />
         <span className="label">
@@ -107,7 +188,7 @@ export function ResultScreen() {
 
       <div className={styles.grid}>
         <section className={styles.hero}>
-          <span className="label">{result.run.status === "encore" ? "Encore shift · saved, not ranked" : "Grid restored"}</span>
+          <span className="label">Grid restored</span>
           <div className={styles.scoreRow}>
             <span className={`num ${styles.score}`}>{score.toLocaleString("en-IN")}</span>
             <span className={styles.pts}>pts</span>
@@ -128,7 +209,7 @@ export function ResultScreen() {
           {gap !== null && gap > 0 && result.nextAbove && (
             <p className={styles.gap}>
               <span className="num">{gap.toLocaleString("en-IN")}</span> points behind #{result.nextAbove.rank}{" "}
-              {result.nextAbove.name}. One more steady stretch at ×5 would cover it.
+              {result.nextAbove.name}. One steady stretch at ×5 would have covered it.
             </p>
           )}
         </section>
@@ -190,10 +271,8 @@ export function ResultScreen() {
               <dd>{s.bossDown ? "Down" : "Escaped"}</dd>
             </div>
             <div>
-              <dt>Ranked shifts</dt>
-              <dd className="num">
-                {result.attemptsUsed}/{result.attemptsAllowed}
-              </dd>
+              <dt>Shots</dt>
+              <dd className="num">{s.shots}</dd>
             </div>
           </dl>
         </Panel>
@@ -202,23 +281,24 @@ export function ResultScreen() {
       <footer className={styles.actions}>
         <span className={styles.note}>Focus is a relative game score, not a medical measurement.</span>
         <span className={styles.spacer} />
-        <Button variant="ghost" onClick={done}>
-          Finish
-        </Button>
-        <Button
-          variant="secondary"
-          icon="refresh"
-          onClick={() => {
-            dispatch({ type: "RECALIBRATE" });
-            router.push("/setup/");
-          }}
-        >
-          Recalibrate
-        </Button>
-        <Button variant="primary" size="lg" iconAfter="arrowRight" onClick={again}>
-          {attemptsLeft > 0 ? `Another shift · ${attemptsLeft} ranked left` : "Encore shift"}
+        <Countdown left={cardLeft} total={RESULT_CARD_S} label="Top 3 in" />
+        <Button variant="primary" size="lg" iconAfter="arrowRight" onClick={toTop3} disabled={stage !== "card"}>
+          Skip
         </Button>
       </footer>
     </main>
+  );
+}
+
+function Countdown({ left, total, label }: { left: number; total: number; label: string }) {
+  return (
+    <span className={styles.countdown} aria-live="off">
+      <span>
+        {label} <span className="num">{left}</span> s
+      </span>
+      <span className={styles.countBar}>
+        <span style={{ transform: `scaleX(${Math.max(0, left / total)})` }} />
+      </span>
+    </span>
   );
 }

@@ -21,6 +21,7 @@ export function RegisterScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existing, setExisting] = useState<SessionPlayer | null>(null);
+  const [played, setPlayed] = useState(false);
 
   useIdleReset(120, () => {
     dispatch({ type: "RESET" });
@@ -48,7 +49,11 @@ export function RegisterScreen() {
       await proceed({ id: p.id, displayId: p.displayId, fullName: p.fullName });
     } catch (err) {
       if (err instanceof ApiError && err.code === "DUPLICATE_CONTACT") {
-        setExisting(err.body.player as SessionPlayer);
+        const player = err.body.player as SessionPlayer;
+        setExisting(player);
+        // One game per registration: a returning ID that has already played can't go again.
+        const summary = await api.player(player.id).catch(() => null);
+        setPlayed(!!summary && summary.attemptsUsed >= summary.attemptsAllowed);
       } else {
         setError(err instanceof Error ? err.message : "Registration failed. Try again or call a volunteer.");
       }
@@ -73,15 +78,28 @@ export function RegisterScreen() {
               <div className={styles.welcome} role="status">
                 <span className="label">Already on the roster</span>
                 <p className={styles.welcomeName}>
-                  Welcome back, {existing.fullName} <span className="num">{existing.displayId}</span>
+                  {played ? "Shift already logged" : "Welcome back"}, {existing.fullName}{" "}
+                  <span className="num">{existing.displayId}</span>
                 </p>
-                <p className={k.note}>Your earlier shifts are kept. Your best ranked score is the one that counts.</p>
+                <p className={k.note}>
+                  {played
+                    ? "Each registration gets one game, and this ID has played it. Your score is on the board."
+                    : "You signed up but haven’t played yet. Continue to start your shift."}
+                </p>
                 <div className={k.row}>
-                  <Button variant="primary" iconAfter="arrowRight" onClick={() => void proceed(existing)}>
-                    That’s me, continue
-                  </Button>
-                  <Button variant="ghost" onClick={() => setExisting(null)}>
-                    Not me, change ID
+                  {!played && (
+                    <Button variant="primary" iconAfter="arrowRight" onClick={() => void proceed(existing)}>
+                      That’s me, continue
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setExisting(null);
+                      setPlayed(false);
+                    }}
+                  >
+                    {played ? "Back" : "Not me, change ID"}
                   </Button>
                 </div>
               </div>
@@ -177,7 +195,7 @@ export function RegisterScreen() {
               <li>
                 <Icon name="trophy" size={22} />
                 <span>
-                  <b>Your best shift counts.</b> You can’t die: every shift runs the full 60 seconds.
+                  <b>One shift per player.</b> You can’t die: the shift runs the full 45 seconds.
                 </span>
               </li>
             </ul>

@@ -39,18 +39,18 @@ const FocusLensShader = {
       vec2 c = vUv - 0.5;
       float d = uDistort;
       // Lateral wobble of the whole image, like a failing CRT feed.
-      float roll = sin(vUv.y * 40.0 + uTime * 9.0) * 0.0018 * d * d;
+      float roll = sin(vUv.y * 40.0 + uTime * 9.0) * 0.004 * d * d;
       vec2 uv = vUv + vec2(roll, 0.0);
 
       // Radial blur toward the edges: the periphery smears first.
       vec3 acc = vec3(0.0);
       float total = 0.0;
-      float strength = d * 0.035 * smoothstep(0.05, 0.6, length(c));
+      float strength = d * (0.02 + 0.06 * smoothstep(0.0, 0.55, length(c)));
       for (int i = 0; i < 6; i++) {
         float k = float(i) / 5.0;
         float w = 1.0 - k * 0.6;
         vec2 o = c * strength * k;
-        float ca = d * 0.006 * (0.5 + k);
+        float ca = d * 0.012 * (0.5 + k);
         acc.r += texture2D(tDiffuse, uv - o + c * ca).r * w;
         acc.g += texture2D(tDiffuse, uv - o).g * w;
         acc.b += texture2D(tDiffuse, uv - o - c * ca).b * w;
@@ -112,7 +112,7 @@ export class PostFX {
     this.lens.uniforms.uLocked!.value = locked;
     this.lens.uniforms.uAlarm!.value = alarm;
     // Motion trails only appear when distracted: the "blurry" enemy effect.
-    (this.afterimage.uniforms as { damp: { value: number } }).damp.value = Math.min(0.86, distortion * 0.95);
+    (this.afterimage.uniforms as { damp: { value: number } }).damp.value = Math.min(0.9, distortion * 0.98);
     this.bloom.strength = 0.75 + locked * 0.35;
   }
 

@@ -48,8 +48,6 @@ const envSchema = z.object({
   MAINS_HZ: z.coerce.number().int().refine((v) => v === 50 || v === 60 || v === 0).default(NOTCH_HZ_DEFAULT),
   /** Same seed for everyone → same enemy sequence → fair leaderboard. */
   EVENT_SEED: z.coerce.number().int().default(20261031),
-  /** Ranked attempts per player; later runs are saved as "encore". */
-  ATTEMPTS_PER_PLAYER: z.coerce.number().int().min(1).max(20).default(3),
   EVENT_NAME: z.string().default("Neural Core Arena"),
 });
 

@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 import { GameHud } from "@/components/GameHud";
 import { Icon } from "@/components/Icon";
 import type { Arena, ArenaHud, ArenaResult } from "@/game/arena";
-import { api } from "@/lib/api";
+import { api, ApiError } from "@/lib/api";
 import { audio } from "@/lib/audio";
 import { useCommands, useLink, useMessages } from "@/lib/link";
 import { backupScore } from "@/lib/localBackup";
@@ -15,12 +15,12 @@ import { submitRun } from "@/lib/pending";
 import { useKiosk } from "@/lib/useKiosk";
 import styles from "./PlayScreen.module.css";
 
-type Stage = "loading" | "briefing" | "live" | "saving" | "error";
+type Stage = "loading" | "briefing" | "live" | "saving" | "error" | "played";
 
 const BRIEF = [
   "Substation 07, 23:41. The Neural Core blew an hour ago. The dead are up, and they're carrying current.",
   "They're drawn to the last live transformer. Yours. The emitter runs on your headset.",
-  "Calm mind, clean arc. Hold your focus and every kill chains. Sixty seconds until the grid reboots.",
+  "Calm mind, clean arc. Hold your focus and every kill chains. Forty-five seconds until the grid reboots.",
 ];
 
 export function PlayScreen() {
@@ -35,7 +35,7 @@ export function PlayScreen() {
   const [radio, setRadio] = useState<{ text: string; from: string; key: number } | null>(null);
   const [banner, setBanner] = useState<{ text: string; kind: "up" | "break"; key: number } | null>(null);
   const [briefLine, setBriefLine] = useState(0);
-  const [goal, setGoal] = useState<{ best: number | null; attemptsLeft: number } | null>(null);
+  const [goal, setGoal] = useState<{ best: number | null } | null>(null);
   const started = useRef(false);
   const finished = useRef(false);
 
@@ -54,12 +54,16 @@ export function PlayScreen() {
         setStage("briefing");
       })
       .catch((e: Error) => {
-        setError(e.message);
-        setStage("error");
+        setError(
+          e instanceof ApiError && e.code === "ALREADY_PLAYED"
+            ? "This player has already played. Each registration gets one game."
+            : e.message,
+        );
+        setStage(e instanceof ApiError && e.code === "ALREADY_PLAYED" ? "played" : "error");
       });
     api
       .player(session.player.id)
-      .then((p) => setGoal({ best: p.personalBest, attemptsLeft: Math.max(0, p.attemptsAllowed - p.attemptsUsed) }))
+      .then((p) => setGoal({ best: p.personalBest }))
       .catch(() => undefined);
   }, [session.player, session.calibration, run, stage, station, dispatch, router]);
 
@@ -234,7 +238,6 @@ export function PlayScreen() {
                 ) : (
                   <>First shift. Click to fire, stay calm to chain.</>
                 )}
-                {run && !run.ranked && <em> Encore shift: saved, not ranked.</em>}
               </span>
               <Button variant="primary" iconAfter="arrowRight" onClick={go} disabled={!arena}>
                 {arena ? "Skip briefing" : "Charging arena…"}
@@ -271,6 +274,25 @@ export function PlayScreen() {
             <Icon name="bolt" size={40} />
             <h2>Logging your shift</h2>
             <p>Verifying the run with the grid server.</p>
+          </div>
+        </div>
+      )}
+
+      {stage === "played" && (
+        <div className={styles.overlay}>
+          <div className={styles.pauseCard}>
+            <Icon name="trophy" size={40} />
+            <h2>Shift already logged</h2>
+            <p>{error}</p>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                dispatch({ type: "RESET" });
+                router.replace("/");
+              }}
+            >
+              Back to start
+            </Button>
           </div>
         </div>
       )}

@@ -70,11 +70,31 @@ export class FilterChain {
   }
 }
 
-/** 0.5-45 Hz band-pass (2nd-order HP + 4th-order LP) followed by a mains notch. */
+/**
+ * 0.5-45 Hz band-pass (2nd-order HP + 4th-order LP) and mains rejection:
+ * two cascaded notches at the mains frequency (deep and slightly wider, for
+ * a noisy venue whose mains drifts by a fraction of a hertz) and one at its
+ * first harmonic.
+ */
 export function createEegFilter(fs: number, lowHz: number, highHz: number, notchHz: number): FilterChain {
   const stages = [Biquad.highpass(fs, lowHz), Biquad.lowpass(fs, highHz), Biquad.lowpass(fs, highHz)];
-  if (notchHz > 0 && notchHz < fs / 2) stages.push(Biquad.notch(fs, notchHz));
+  if (notchHz > 0 && notchHz < fs / 2) stages.push(Biquad.notch(fs, notchHz, 20), Biquad.notch(fs, notchHz, 35));
+  if (notchHz > 0 && notchHz * 2 < fs / 2) stages.push(Biquad.notch(fs, notchHz * 2, 25));
   return new FilterChain(stages);
+}
+
+/**
+ * Clips impulses (electrical spikes, cable knocks) to ±k robust std-devs
+ * around the median, so a single spike cannot flood every frequency band.
+ */
+export function despike(x: Float64Array, k = 5): Float64Array {
+  const sorted = Array.from(x).sort((a, b) => a - b);
+  const med = sorted[sorted.length >> 1] ?? 0;
+  const limit = k * robustStd(x);
+  if (!(limit > 0)) return x;
+  const out = new Float64Array(x.length);
+  for (let i = 0; i < x.length; i++) out[i] = Math.max(med - limit, Math.min(med + limit, x[i]!));
+  return out;
 }
 
 /** High-pass only: used to measure mains contamination before the notch. */
