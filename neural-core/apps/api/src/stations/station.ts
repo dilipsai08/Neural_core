@@ -42,6 +42,7 @@ export interface StationDeps {
   hub: StationHub;
   mainsHz: number;
   baud: number;
+  serialRate: number;
   dataDir: string;
   defaultCalibration: () => Calibration;
   onCalibrated: (station: number, playerId: number | null, c: Calibration) => void;
@@ -113,7 +114,12 @@ export class Station {
         break;
       case "serial": {
         if (!opts.port) throw new Error("serial source needs a port");
-        const serial = new SerialSource({ path: opts.port, baud: opts.baud ?? this.deps.baud, log: this.deps.log });
+        const serial = new SerialSource({
+          path: opts.port,
+          baud: opts.baud ?? this.deps.baud,
+          rateHz: this.deps.serialRate,
+          log: this.deps.log,
+        });
         serial.onAdcMax((max) => this.processor.setAdcMax(max));
         src = serial;
         this.sourceDetail = `${opts.port} @ ${opts.baud ?? this.deps.baud}`;

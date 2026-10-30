@@ -89,10 +89,11 @@ The examples below use `COM5`; use your own.
 From the `neural-core` folder:
 
 ```bash
-pnpm sensor:check --port COM5 --baud 230400
+pnpm sensor:check --port COM5 --baud 230400 --rate 500
 ```
 
-Within a few seconds you should see:
+(`--rate 500` tells it the Chords sketch's `SAMP_RATE`; without it the rate is
+detected automatically over the first ~8 s.) Within a few seconds you should see:
 
 ```
   serial COM5: open @ 230400 baud
@@ -116,7 +117,7 @@ Try these, so you know the pipeline reacts to *you*:
 Now run it with a personal calibration, which is what the game does too:
 
 ```bash
-pnpm sensor:check --port COM5 --baud 230400 --calibrate
+pnpm sensor:check --port COM5 --baud 230400 --rate 500 --calibrate
 ```
 
 Follow the prompts: **20 s relax** (slow breathing), then **20 s focus** (count
@@ -136,6 +137,7 @@ Edit `neural-core/.env` and change these two lines (keep everything else):
 ```env
 STATIONS=1=serial:COM5
 SERIAL_BAUD=230400
+SERIAL_RATE=500
 ```
 
 Start the game:
@@ -232,6 +234,7 @@ talking to each other; use a phone hotspot instead.
 | `open failed … File not found` | Unplug and replug the USB cable; the COM number may have changed |
 | Quality **BAD**, waveform flat or clipped | Electrode off the skin, cable clip loose, or VCC/GND/OUT wiring. Reseat everything |
 | Quality **FAIR** in the terminal / "Signal noisy" in the game, "Low mains hum" unchecked | Unplug the laptop charger, move away from power strips |
+| `BAD` with beta near 100 % and a huge `idx` | Wrong sample rate: set `--rate 500` / `SERIAL_RATE=500` for the Chords sketch. Run `pnpm sensor:check --port COM5 --raw` to see packets/s |
 | Focus stuck near 0 % or 100 % | Recalibrate (results screen → Recalibrate, or `--calibrate` in the terminal) |
 | Focus jumps on every blink | Normal on the forehead; the game holds the score through blinks. Soft eyes help |
 | Game pauses with "Headset signal lost" | No data for 2.5 s (cable pulled or the port closed). It resumes by itself when data returns |

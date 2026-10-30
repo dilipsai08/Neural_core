@@ -42,10 +42,13 @@ describe("FocusProcessor", () => {
     expect(run(4, () => -MAX).at(-1)!.quality).toBe("bad");
   });
 
-  it("flags heavy mains hum", () => {
+  it("warns about heavy mains hum but keeps the bands clean", () => {
+    const clean = run(5, eeg(8, 8)).at(-1)!;
     const a = run(5, (t) => eeg(8, 8)(t) + 200 * Math.sin(2 * Math.PI * 50 * t)).at(-1)!;
-    expect(a.quality).toBe("bad");
+    expect(a.quality).toBe("fair");
     expect(a.mainsRatio).toBeGreaterThan(3);
+    // The notch removes the hum: the engagement index barely moves.
+    expect(Math.abs(a.index - clean.index) / clean.index).toBeLessThan(0.15);
   });
 
   it("detects a blink", () => {

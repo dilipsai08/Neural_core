@@ -41,7 +41,6 @@ export const QUALITY_RAIL_SHARE_BAD = 0.05;
 export const QUALITY_FLAT_COUNTS = 2;
 /** Mains ratio: power at notch frequency vs 1-45 Hz power, before the notch. */
 export const QUALITY_MAINS_RATIO_FAIR = 0.6;
-export const QUALITY_MAINS_RATIO_BAD = 3;
 /** No samples for this long → source considered disconnected. */
 export const SOURCE_STALE_MS = 1500;
 

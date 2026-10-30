@@ -10,7 +10,6 @@ import {
   FFT_SIZE,
   FOCUS_EMA_ALPHA,
   QUALITY_FLAT_COUNTS,
-  QUALITY_MAINS_RATIO_BAD,
   QUALITY_MAINS_RATIO_FAIR,
   QUALITY_RAIL_SHARE_BAD,
   TENSION_PENALTY,
@@ -150,8 +149,10 @@ export class FocusProcessor {
     const eegBand = bandPower(dcPsd, fs, FFT_SIZE, 1, 45);
     const mainsRatio = eegBand > 0 ? mains / eegBand : 0;
 
+    // Clipping or a dead line make the EEG unusable. Mains hum alone is removed by
+    // the notch, so it only warns ("fair") instead of blocking play.
     let quality: SignalQuality = "good";
-    if (railShare > QUALITY_RAIL_SHARE_BAD || flat || mainsRatio > QUALITY_MAINS_RATIO_BAD) quality = "bad";
+    if (railShare > QUALITY_RAIL_SHARE_BAD || flat) quality = "bad";
     else if (mainsRatio > QUALITY_MAINS_RATIO_FAIR || railShare > 0) quality = "fair";
 
     const wave: number[] = [];

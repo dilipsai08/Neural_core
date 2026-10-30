@@ -43,6 +43,7 @@ export function createContext(env: Env, store: Store, hubFactory: (ctx: AppConte
           hub: ctx.hub,
           mainsHz: env.MAINS_HZ,
           baud: env.SERIAL_BAUD,
+          serialRate: env.SERIAL_RATE,
           dataDir: env.DATA_DIR,
           defaultCalibration: () => ctx.defaultCalibration(),
           onCalibrated: (station, playerId, c) => store.saveCalibration(station, playerId, c),

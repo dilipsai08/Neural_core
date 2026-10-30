@@ -5,6 +5,8 @@ import { RateAdapter, StreamDecoder, type Protocol } from "./stream-decoder.js";
 export interface SerialSourceOptions {
   path: string;
   baud: number;
+  /** Known sample rate of the board (Chords on the UNO R4: 500). 0 or unset = measure it. */
+  rateHz?: number;
   log: (msg: string) => void;
 }
 
@@ -86,10 +88,19 @@ export class SerialSource implements FocusSource {
     this.baud = this.bauds[this.baudIndex % this.bauds.length]!;
     const port = new SerialPort({ path: this.opts.path, baudRate: this.baud, autoOpen: false });
     const decoder = new StreamDecoder();
-    const rate = new RateAdapter((counts) => {
-      const s: RawSample = { t: Date.now(), counts };
-      for (const cb of this.listeners) cb(s);
-    });
+    const rate = new RateAdapter(
+      (counts) => {
+        const s: RawSample = { t: Date.now(), counts };
+        for (const cb of this.listeners) cb(s);
+      },
+      undefined,
+      undefined,
+      this.opts.rateHz ?? 0,
+    );
+    if (rate.rateHz !== null) {
+      this.inputRateHz = rate.rateHz;
+      this.opts.log(`serial ${this.opts.path}: sample rate set to ${rate.rateHz} Hz${rate.factor > 1 ? `, averaging every ${rate.factor} samples to 250 Hz` : ""}`);
+    }
     this.port = port;
     this.protocol = "unknown";
     this.inputRateHz = null;
@@ -119,7 +130,7 @@ export class SerialSource implements FocusSource {
       if (before === null && rate.rateHz !== null) {
         this.inputRateHz = rate.rateHz;
         this.opts.log(
-          `serial ${this.opts.path}: ${rate.rateHz} Hz in` +
+          `serial ${this.opts.path}: ${rate.rateHz} Hz in${rate.measuredHz !== rate.rateHz ? ` (measured ≈${rate.measuredHz})` : ""}` +
             (rate.mode === "resample"
               ? `: unusual rate, resampling to 250 Hz (expected 250 or 500; run pnpm sensor:check --raw to see why)`
               : rate.factor > 1

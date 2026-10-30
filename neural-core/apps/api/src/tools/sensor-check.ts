@@ -7,6 +7,7 @@
  *   pnpm sensor:check --port COM5               live readout (typical calibration)
  *   pnpm sensor:check --port COM5 --calibrate   20 s relax + 20 s focus first, then live
  *   pnpm sensor:check --simulate                no hardware: synthetic EEG
+ *   pnpm sensor:check --port COM5 --rate 500    skip rate detection (Chords on the UNO R4 is 500 Hz)
  *   pnpm sensor:check --port COM5 --raw         transport diagnostics: bytes, packets, losses, A0 range
  */
 import {
@@ -57,7 +58,12 @@ async function main() {
 
   const source: FocusSource = simulate
     ? new FakeSource()
-    : new SerialSource({ path: portPath!, baud: Number(arg("baud") ?? SERIAL_BAUD_DEFAULT), log: (m) => console.log(`  ${m}`) });
+    : new SerialSource({
+        path: portPath!,
+        baud: Number(arg("baud") ?? SERIAL_BAUD_DEFAULT),
+        rateHz: Number(arg("rate") ?? 0),
+        log: (m) => console.log(`  ${m}`),
+      });
   const processor = new FocusProcessor({ fs: SAMPLE_RATE_HZ, adcMax: source.adcMax, mainsHz: Number(arg("mains") ?? NOTCH_HZ_DEFAULT) });
   if (source instanceof SerialSource) source.onAdcMax((max) => processor.setAdcMax(max));
 
@@ -116,7 +122,7 @@ async function main() {
     const tag = phase === "live" ? "" : ` [${phase} ${Math.max(0, Math.ceil((phase === "relax" ? CALIBRATION_RELAX_S : CALIBRATION_FOCUS_S) - elapsed))}s]`;
     console.log(
       `${a.quality.toUpperCase().padEnd(4)} θ${pct(a.bands.theta, total)}% α${pct(a.bands.alpha, total)}% β${pct(a.bands.beta, total)}% hi${pct(a.bands.high, total)}%` +
-        `  idx ${a.index.toFixed(2)}  focus ${bar(s.score)} ${String(Math.round(s.score)).padStart(3)}%${tag} ${note}`,
+        `  mains ${a.mainsRatio.toFixed(1).padStart(4)}  idx ${a.index.toFixed(2)}  focus ${bar(s.score)} ${String(Math.round(s.score)).padStart(3)}%${tag} ${note}`,
     );
   };
 

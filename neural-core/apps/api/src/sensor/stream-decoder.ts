@@ -199,22 +199,31 @@ export class StreamDecoder {
   }
 }
 
+/** Rates boards actually use; a measured rate within 6% of one of these snaps to it. */
+const STANDARD_RATES = [125, 250, 500, 1000, 2000];
+
 /**
- * Converts any input rate to the 250 Hz the focus pipeline expects. The first
- * 2 s (after a 0.5 s warm-up) measure the real rate. A whole multiple of 250
- * (Chords on the UNO R4 streams 500 Hz) is reduced by averaging every k
- * samples, which also acts as a light low-pass filter. Any other rate is
- * resampled by linear interpolation, so frequencies stay correct even if the
- * board runs at an unexpected speed.
+ * Converts any input rate to the 250 Hz the focus pipeline expects.
+ *
+ * The rate is measured over 8 s (after a 0.5 s warm-up): every one-second
+ * count that matches a standard rate votes for it, so a pause after START or
+ * USB bursts on Windows cannot skew the result. If the board's rate is
+ * known (Chords on the UNO R4: 500 Hz), pass it in and nothing is measured. A whole multiple
+ * of 250 Hz (Chords on the UNO R4 streams 500 Hz) is reduced by averaging
+ * every k samples, which also acts as a light low-pass filter. Any other rate
+ * is resampled by linear interpolation, so frequencies stay correct.
  */
 export class RateAdapter {
   rateHz: number | null = null;
+  /** The raw estimate before snapping, for the log. */
+  measuredHz: number | null = null;
   factor = 1;
   /** "average" for whole multiples of the target, "resample" otherwise. */
   mode: "average" | "resample" = "average";
   private firstAt: number | null = null;
   private startedAt: number | null = null;
   private pending: number[] = [];
+  private arrivals: Array<{ t: number; n: number }> = [];
   private acc = 0;
   private n = 0;
   // resampling state
@@ -225,8 +234,15 @@ export class RateAdapter {
   constructor(
     private readonly emit: (counts: number) => void,
     private readonly target = SAMPLE_RATE_HZ,
-    private readonly measureMs = 2000,
-  ) {}
+    private readonly measureMs = 8000,
+    /** Known input rate (e.g. 500 for Chords on the UNO R4); 0 = measure it. */
+    fixedRateHz = 0,
+  ) {
+    if (fixedRateHz > 0) {
+      this.measuredHz = fixedRateHz;
+      this.applyRate(fixedRateHz);
+    }
+  }
 
   push(samples: readonly number[], nowMs: number): void {
     if (samples.length === 0) return;
@@ -236,25 +252,57 @@ export class RateAdapter {
       if (nowMs - this.firstAt < 500) return;
       this.startedAt ??= nowMs;
       this.pending.push(...samples);
-      const elapsed = nowMs - this.startedAt;
-      if (elapsed < this.measureMs) return;
-      this.rateHz = Math.round((this.pending.length / elapsed) * 1000);
-      const k = Math.max(1, Math.round(this.rateHz / this.target));
-      const nearMultiple = Math.abs(this.rateHz - k * this.target) <= this.target * 0.12;
-      if (nearMultiple) {
-        this.mode = "average";
-        this.factor = k;
-      } else {
-        this.mode = "resample";
-        this.factor = 1;
-        this.step = this.rateHz / this.target;
-      }
+      this.arrivals.push({ t: nowMs - this.startedAt, n: samples.length });
+      if (nowMs - this.startedAt < this.measureMs) return;
+      this.decideRate(nowMs - this.startedAt);
       const backlog = this.pending;
       this.pending = [];
+      this.arrivals = [];
       for (const s of backlog) this.one(s);
       return;
     }
     for (const s of samples) this.one(s);
+  }
+
+  private decideRate(elapsedMs: number): void {
+    // Each one-second count votes for the standard rate it matches (within 6%).
+    // A pause after START or USB bursts on Windows produce seconds that match
+    // nothing, while every steady second votes for the true rate.
+    const SLICE = 1000;
+    const slices = new Array<number>(Math.max(1, Math.floor(elapsedMs / SLICE))).fill(0);
+    for (const a of this.arrivals) {
+      const k = Math.min(slices.length - 1, Math.floor(a.t / SLICE));
+      slices[k]! += a.n;
+    }
+    const votes = new Map<number, number>();
+    for (const n of slices) {
+      const r = STANDARD_RATES.find((rate) => Math.abs(n - rate) <= rate * 0.06);
+      if (r) votes.set(r, (votes.get(r) ?? 0) + 1);
+    }
+    const best = [...votes.entries()].sort((a, b) => b[1] - a[1])[0];
+    // No steady second at a standard rate: use the median of non-empty seconds.
+    const busy = slices.filter((n) => n > 0).sort((a, b) => a - b);
+    const median = busy.length ? busy[busy.length >> 1]! : (this.pending.length / elapsedMs) * 1000;
+    this.measuredHz = Math.round(median);
+    if (best && best[1] >= 2) {
+      this.applyRate(best[0]);
+      return;
+    }
+    const snapped = STANDARD_RATES.find((r) => Math.abs(median - r) <= r * 0.06);
+    this.applyRate(snapped ?? this.measuredHz);
+  }
+
+  private applyRate(rate: number): void {
+    this.rateHz = rate;
+    const k = Math.round(this.rateHz / this.target);
+    if (k >= 1 && k * this.target === this.rateHz) {
+      this.mode = "average";
+      this.factor = k;
+    } else {
+      this.mode = "resample";
+      this.factor = 1;
+      this.step = this.rateHz / this.target;
+    }
   }
 
   private one(s: number): void {
@@ -285,6 +333,8 @@ export class RateAdapter {
 
   reset(): void {
     this.rateHz = null;
+    this.measuredHz = null;
+    this.arrivals = [];
     this.factor = 1;
     this.mode = "average";
     this.firstAt = null;

@@ -43,6 +43,8 @@ const envSchema = z.object({
   WEB_DIST: z.string().default(path.join(root, "apps/web/out")),
   STATIONS: stationSpecSchema,
   SERIAL_BAUD: z.coerce.number().int().default(SERIAL_BAUD_DEFAULT),
+  /** Board sample rate if known (Chords on the UNO R4: 500). 0 = measure it automatically. */
+  SERIAL_RATE: z.coerce.number().int().min(0).default(0),
   MAINS_HZ: z.coerce.number().int().refine((v) => v === 50 || v === 60 || v === 0).default(NOTCH_HZ_DEFAULT),
   /** Same seed for everyone → same enemy sequence → fair leaderboard. */
   EVENT_SEED: z.coerce.number().int().default(20261031),

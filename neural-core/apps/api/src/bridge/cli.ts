@@ -5,6 +5,7 @@
  * over WebSocket; the server does all the DSP.
  *
  *   pnpm bridge --port COM5 --server ws://192.168.1.10:3001/ws --station 2
+ *   pnpm bridge --port COM5 --baud 230400 --rate 500 --server ...   (Chords on the UNO R4)
  *   pnpm bridge --list
  *   pnpm bridge --simulate --server ws://192.168.1.10:3001/ws --station 2   (LAN rehearsal, no hardware)
  */
@@ -28,6 +29,7 @@ async function main() {
   const station = Number(arg("station") ?? "1");
   const baud = Number(arg("baud") ?? SERIAL_BAUD_DEFAULT);
   const simulate = process.argv.includes("--simulate");
+  const rateHz = Number(arg("rate") ?? 0);
   if (!portPath && !simulate) {
     console.error("usage: pnpm bridge --port <COMx|/dev/ttyACM0> --server ws://<server-ip>:3001/ws --station <n>");
     process.exit(1);
@@ -51,7 +53,7 @@ async function main() {
   };
   connectWs();
 
-  const source = simulate ? new FakeSource() : new SerialSource({ path: portPath!, baud, log: (m) => console.log(`[bridge] ${m}`) });
+  const source = simulate ? new FakeSource() : new SerialSource({ path: portPath!, baud, rateHz, log: (m) => console.log(`[bridge] ${m}`) });
   source.onSample((s) => {
     batch.push(s.counts);
     if (batch.length < BRIDGE_BATCH_SAMPLES) return;

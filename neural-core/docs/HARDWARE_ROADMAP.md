@@ -177,10 +177,11 @@ All constants live in `packages/shared/src/constants.ts`.
    - *Jaw/forehead tension*: 30–45 Hz power above 35% of the total. This fakes
      high beta, so it is treated as distraction: up to −35 points, and the HUD
      says "unclench".
-7. **Quality.** `bad` if >5% of samples are railed, the signal is flat, or
-   50 Hz power is above 3× the 1–45 Hz power; `fair` for moderate mains hum;
-   otherwise `good`. The headset screen only lets a player continue on `good`
-   (a volunteer override appears after 20 s).
+7. **Quality.** `bad` if >5% of samples are railed or the signal is flat
+   (the EEG is unusable). Strong 50 Hz mains hum alone is `fair`: the notch
+   removes it, so it warns instead of blocking. Otherwise `good`. The headset
+   screen only lets a player continue on `good` (a volunteer override appears
+   after 20 s).
 8. **Calibration** (20 s relax with the breathing beacon, then 20 s focus by
    counting down from 100 in sevens). Windows with artifacts or bad quality are
    dropped. `low` = 10th percentile of relax, `high` = 90th percentile of focus.

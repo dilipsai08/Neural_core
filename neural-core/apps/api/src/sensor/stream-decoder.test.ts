@@ -89,21 +89,21 @@ describe("RateAdapter", () => {
   function feed(rate: number) {
     const out: number[] = [];
     const a = new RateAdapter((c) => out.push(c));
-    for (let t = 0; t <= 4000; t += 20) a.push(Array.from({ length: (rate * 20) / 1000 }, () => 100), t);
+    for (let t = 0; t <= 10000; t += 20) a.push(Array.from({ length: (rate * 20) / 1000 }, () => 100), t);
     return { a, out };
   }
 
   it("passes 250 Hz straight through", () => {
     const { a } = feed(250);
+    expect(a.rateHz).toBe(250);
     expect(a.factor).toBe(1);
   });
 
   it("halves Chords' 500 Hz by averaging pairs", () => {
     const out: number[] = [];
     const a = new RateAdapter((c) => out.push(c));
-    for (let t = 0; t <= 3000; t += 20) a.push(Array.from({ length: 10 }, (_, i) => (i % 2 ? 110 : 90)), t);
-    expect(a.rateHz).toBeGreaterThan(480);
-    expect(a.rateHz).toBeLessThan(520);
+    for (let t = 0; t <= 10000; t += 20) a.push(Array.from({ length: 10 }, (_, i) => (i % 2 ? 110 : 90)), t);
+    expect(a.rateHz).toBe(500);
     expect(a.factor).toBe(2);
     expect(out.every((v) => v === 100)).toBe(true);
   });
@@ -113,7 +113,7 @@ describe("RateAdapter", () => {
     const a = new RateAdapter((c) => out.push(c));
     let t = 0;
     let i = 0;
-    for (; t <= 6000; t += 50) {
+    for (; t <= 14000; t += 50) {
       const n = Math.round(((t + 50) * 134) / 1000) - Math.round((t * 134) / 1000);
       a.push(Array.from({ length: n }, () => i++), t);
     }
@@ -125,5 +125,30 @@ describe("RateAdapter", () => {
     // A ramp stays a ramp: output steps are ≈ 134/250 of an input step.
     const steps = out.slice(10, 50).map((v, k, arr) => (k ? v - arr[k - 1]! : 0)).slice(1);
     expect(Math.max(...steps)).toBeLessThanOrEqual(1);
+  });
+
+  it("skips detection when the board's rate is given", () => {
+    const out: number[] = [];
+    const a = new RateAdapter((c) => out.push(c), 250, 8000, 500);
+    expect(a.rateHz).toBe(500);
+    a.push([10, 20, 30, 40], 0);
+    expect(out).toEqual([15, 35]);
+  });
+
+  it("is not fooled by a pause after START and Windows USB bursts", () => {
+    const out: number[] = [];
+    const a = new RateAdapter((c) => out.push(c));
+    // Packets per second logged from a real UNO R4 running Chords.
+    const pattern = [300, 0, 503, 504, 505, 501, 501, 501, 508, 273, 732, 506, 501, 504, 504, 508, 508, 333, 675];
+    let t = 0;
+    for (const perSecond of pattern) {
+      for (let q = 0; q < 4; q++) {
+        a.push(Array.from({ length: Math.round(perSecond / 4) }, () => 100), t);
+        t += 250;
+      }
+    }
+    expect(a.rateHz).toBe(500);
+    expect(a.mode).toBe("average");
+    expect(a.factor).toBe(2);
   });
 });
