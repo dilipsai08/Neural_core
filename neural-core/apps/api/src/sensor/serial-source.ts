@@ -10,7 +10,9 @@ export interface SerialSourceOptions {
 
 /** Bauds tried in turn until the bytes make sense: ours (115200) and Chords on the UNO R4 (230400). */
 const CANDIDATE_BAUDS = [115200, 230400, 250000, 57600, 9600];
-const DETECT_TIMEOUT_MS = 3500;
+const DETECT_TIMEOUT_MS = 6000;
+/** How often START is re-sent while waiting for the first recognisable data. */
+const START_RETRY_MS = 1000;
 
 /**
  * Reads the Arduino over USB serial. Works with the Neural Core sketch
@@ -35,6 +37,7 @@ export class SerialSource implements FocusSource {
   private retryMs = 1000;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private detectTimer: ReturnType<typeof setTimeout> | null = null;
+  private startTimer: ReturnType<typeof setInterval> | null = null;
   private bauds: number[];
   private baudIndex = 0;
 
@@ -52,6 +55,7 @@ export class SerialSource implements FocusSource {
     this.stopped = true;
     if (this.retryTimer) clearTimeout(this.retryTimer);
     if (this.detectTimer) clearTimeout(this.detectTimer);
+    if (this.startTimer) clearInterval(this.startTimer);
     const port = this.port;
     this.port = null;
     if (port?.isOpen) {
@@ -90,11 +94,16 @@ export class SerialSource implements FocusSource {
     this.protocol = "unknown";
     this.inputRateHz = null;
 
+    let bytesIn = 0;
+    let firstBytes = "";
     port.on("data", (chunk: Buffer) => {
+      bytesIn += chunk.length;
+      if (firstBytes.length < 48) firstBytes += chunk.subarray(0, 16).toString("hex").replace(/(..)/g, "$1 ");
       const out = decoder.push(chunk);
       if (decoder.protocol !== "unknown" && this.protocol === "unknown") {
         this.protocol = decoder.protocol;
         if (this.detectTimer) clearTimeout(this.detectTimer);
+        if (this.startTimer) clearInterval(this.startTimer);
         this.baudIndex = this.bauds.indexOf(this.baud);
         this.opts.log(
           `serial ${this.opts.path}: ${decoder.protocol === "chords" ? `Chords firmware, ${decoder.channels} channels (using A0)` : "Neural Core sketch"} @ ${this.baud} baud`,
@@ -118,6 +127,7 @@ export class SerialSource implements FocusSource {
     port.on("close", () => {
       this.connected = false;
       if (this.detectTimer) clearTimeout(this.detectTimer);
+      if (this.startTimer) clearInterval(this.startTimer);
       if (!this.stopped) this.opts.log(`serial ${this.opts.path}: closed`);
       this.scheduleRetry();
     });
@@ -138,14 +148,26 @@ export class SerialSource implements FocusSource {
       this.lastError = null;
       this.retryMs = 1000;
       this.opts.log(`serial ${this.opts.path}: open @ ${this.baud} baud`);
-      // "i": the Neural Core sketch reprints its header. "START": Chords firmware begins streaming.
-      port.write("i\n");
-      port.write("START\n");
+      // Native-USB boards (UNO R4 Minima) only transmit once the host raises DTR,
+      // which the Arduino IDE and Chrome do automatically.
+      port.set({ dtr: true, rts: true }, () => undefined);
+      // "START" makes the Chords firmware stream; "i" makes the Neural Core sketch reprint its header.
+      // Wait for the USB link to settle, then keep asking until data arrives.
+      const poke = () => {
+        if (port.isOpen && this.protocol === "unknown") port.write("START\ni\n");
+      };
+      setTimeout(poke, 400);
+      this.startTimer = setInterval(poke, START_RETRY_MS);
       this.detectTimer = setTimeout(() => {
+        if (this.startTimer) clearInterval(this.startTimer);
         if (this.protocol !== "unknown" || this.stopped) return;
         this.baudIndex += 1;
         const next = this.bauds[this.baudIndex % this.bauds.length]!;
-        this.opts.log(`serial ${this.opts.path}: no recognisable data @ ${this.baud}, trying ${next} baud`);
+        this.opts.log(
+          bytesIn === 0
+            ? `serial ${this.opts.path}: no bytes at all @ ${this.baud} (board not sending: close other programs using the port, replug USB or press RESET); trying ${next} baud`
+            : `serial ${this.opts.path}: ${bytesIn} bytes but not a known format @ ${this.baud} (first bytes: ${firstBytes.trim()}); trying ${next} baud`,
+        );
         port.close();
       }, DETECT_TIMEOUT_MS);
     });
