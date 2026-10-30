@@ -62,46 +62,18 @@ describe("FocusProcessor", () => {
   });
 });
 
-describe("noise robustness", () => {
-  it("removes 100 Hz mains harmonic as well as 50 Hz", () => {
-    const clean = run(5, eeg(8, 8)).at(-1)!;
-    const humm = run(5, (t) => eeg(8, 8)(t) + 150 * Math.sin(2 * Math.PI * 50 * t) + 80 * Math.sin(2 * Math.PI * 100 * t)).at(-1)!;
-    expect(Math.abs(humm.index - clean.index) / clean.index).toBeLessThan(0.15);
-  });
-
-  it("is not thrown by electrical spikes", () => {
-    const clean = run(5, eeg(8, 8)).at(-1)!;
-    // Two short, huge spikes per second (switching noise, cable knocks).
-    const spiky = run(5, (t, i) => eeg(8, 8)(t) + (i % 125 === 0 ? 2500 : 0)).at(-1)!;
-    expect(spiky.index / clean.index).toBeGreaterThan(0.6);
-    expect(spiky.index / clean.index).toBeLessThan(1.6);
-  });
-});
-
 describe("FocusScorer", () => {
   const base: Analysis = {
     tMs: 0, bands: { theta: 1, alpha: 1, beta: 1, high: 0 }, index: 1, artifact: "none", highRatio: 0,
     quality: "good", mainsRatio: 0, railShare: 0, wave: [],
   };
 
-  it("maps through calibration, ignores a single noisy window and smooths", () => {
+  it("maps through calibration and smooths", () => {
     const s = new FocusScorer({ low: 0.5, high: 1.5, source: "measured" });
-    for (let i = 0; i < 5; i++) s.next({ ...base, tMs: i * 250, index: 1.5 });
-    expect(s.next({ ...base, tMs: 1250, index: 1.5 }).score).toBe(100);
-    // One wild window (EM spike) does not move the score: the median rejects it.
-    expect(s.next({ ...base, tMs: 1500, index: 0.5 }).raw).toBe(100);
-    // A sustained change does, smoothly.
-    let last = 100;
-    for (let i = 0; i < 6; i++) last = s.next({ ...base, tMs: 1750 + i * 250, index: 0.5 }).score;
-    expect(last).toBeLessThan(80);
-    expect(last).toBeGreaterThan(20);
-  });
-
-  it("holds the score while the signal is unusable", () => {
-    const s = new FocusScorer({ low: 0.5, high: 1.5, source: "measured" });
-    for (let i = 0; i < 5; i++) s.next({ ...base, tMs: i * 250, index: 1.3 });
-    const held = s.next({ ...base, tMs: 1250, index: 0.1, quality: "bad" });
-    expect(held.score).toBeGreaterThan(75);
+    expect(s.next({ ...base, index: 1.5 }).score).toBe(100);
+    const next = s.next({ ...base, tMs: 250, index: 0.5 });
+    expect(next.raw).toBe(0);
+    expect(next.score).toBeCloseTo(85, 0);
   });
 
   it("holds the score through a blink", () => {

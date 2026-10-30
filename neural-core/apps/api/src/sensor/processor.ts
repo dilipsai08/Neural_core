@@ -24,7 +24,7 @@ import {
   type Calibration,
   type SignalQuality,
 } from "@neural-core/shared";
-import { Ring, bandPower, createDcBlocker, createEegFilter, despike, robustStd, std, welchPsd } from "./dsp.js";
+import { Ring, bandPower, createDcBlocker, createEegFilter, robustStd, std, welchPsd } from "./dsp.js";
 
 export interface Analysis {
   /** Sample-clock time of the end of this window (ms since processor start). */
@@ -68,10 +68,6 @@ export class FocusProcessor {
   private sinceHop = 0;
   private samples = 0;
   private settle: number;
-  /** Last few centred samples and the signal's typical spread, for spike removal. */
-  private recentIn: number[] = [];
-  private spikeScale = 0;
-  private spikesRemoved = 0;
 
   constructor(private opts: ProcessorOptions) {
     this.win = Math.round(WINDOW_SIZE_S * opts.fs);
@@ -91,8 +87,6 @@ export class FocusProcessor {
   }
 
   reset(): void {
-    this.recentIn = [];
-    this.spikeScale = 0;
     this.filtered.clear();
     this.dcBlocked.clear();
     this.raw.clear();
@@ -105,8 +99,8 @@ export class FocusProcessor {
 
   /** Feed one raw ADC sample. Returns an analysis when a hop completes. */
   push(counts: number): Analysis | null {
+    const centred = counts - this.opts.adcMax / 2;
     this.raw.push(counts);
-    const centred = this.removeSpike(counts - this.opts.adcMax / 2);
     this.filtered.push(this.eeg.process(centred));
     this.dcBlocked.push(this.dc.process(centred));
     this.samples += 1;
@@ -120,35 +114,10 @@ export class FocusProcessor {
     return this.analyse();
   }
 
-  /**
-   * Electrical spikes are 1-2 samples wide; EEG and even blinks are far wider.
-   * A sample that jumps more than 8 typical spreads away from the median of the
-   * last five is replaced by that median before it reaches the filters, where
-   * it would otherwise ring into the beta band.
-   */
-  private removeSpike(v: number): number {
-    const r = this.recentIn;
-    r.push(v);
-    if (r.length > 5) r.shift();
-    if (r.length < 5 || !(this.spikeScale > 0)) return v;
-    const med = [...r].sort((a, b) => a - b)[2]!;
-    if (Math.abs(v - med) <= 8 * this.spikeScale) return v;
-    this.spikesRemoved += 1;
-    r[r.length - 1] = med;
-    return med;
-  }
-
   private analyse(): Analysis {
-    // Typical sample-to-sample spread of the recent (high-passed) signal, for spike removal.
-    const hp = this.dcBlocked.snapshot();
-    const diffs = new Float64Array(hp.length - 1);
-    for (let i = 1; i < hp.length; i++) diffs[i - 1] = hp[i]! - hp[i - 1]!;
-    this.spikeScale = robustStd(diffs) + robustStd(hp) * 0.25;
-
     const { fs, adcMax, mainsHz } = this.opts;
     const x = this.filtered.snapshot();
-    // Spectrum of the de-spiked signal; blink detection below still sees the raw peaks.
-    const psd = welchPsd(despike(x), this.seg, FFT_SIZE);
+    const psd = welchPsd(x, this.seg, FFT_SIZE);
     const bands: BandPowers = {
       theta: bandPower(psd, fs, FFT_SIZE, BAND_THETA[0], BAND_THETA[1]),
       alpha: bandPower(psd, fs, FFT_SIZE, BAND_ALPHA[0], BAND_ALPHA[1]),
@@ -216,14 +185,10 @@ export interface ScoreFrame {
  * Turns analyses into a 0-100 focus score: calibration mapping, tension
  * penalty, blink hold and EMA smoothing.
  */
-/** Median of the last few indices (≈1.25 s) before mapping: one noisy window cannot swing the score. */
-const INDEX_MEDIAN_N = 5;
-
 export class FocusScorer {
   private ema: number | null = null;
   private lastRaw = 50;
   private blinkSince: number | null = null;
-  private recent: number[] = [];
 
   constructor(private calibration: Calibration) {}
 
@@ -235,7 +200,6 @@ export class FocusScorer {
     this.ema = null;
     this.lastRaw = 50;
     this.blinkSince = null;
-    this.recent = [];
   }
 
   next(a: Analysis): ScoreFrame {
@@ -248,16 +212,7 @@ export class FocusScorer {
       this.blinkSince = null;
     }
 
-    // Clipping or a dead line: hold the last score rather than follow garbage.
-    if (a.quality === "bad" && this.ema !== null) {
-      return { score: round1(this.ema), raw: round1(this.lastRaw) };
-    }
-
-    this.recent.push(a.index);
-    if (this.recent.length > INDEX_MEDIAN_N) this.recent.shift();
-    const sorted = [...this.recent].sort((p, q) => p - q);
-    const index = sorted[sorted.length >> 1]!;
-    let raw = mapFocusScore(index, this.calibration.low, this.calibration.high);
+    let raw = mapFocusScore(a.index, this.calibration.low, this.calibration.high);
     if (a.artifact === "tension") {
       const over = clamp((a.highRatio - TENSION_RATIO) / TENSION_RATIO, 0, 1);
       raw = clamp(raw - TENSION_PENALTY * (0.4 + 0.6 * over), 0, 100);

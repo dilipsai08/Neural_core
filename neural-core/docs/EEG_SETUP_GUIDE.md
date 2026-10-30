@@ -6,7 +6,7 @@ over USB, filters the EEG and turns it into a focus percentage in real time.
 
 ```
 Electrodes → BioAmp EXG Pill → Arduino UNO R4 (A0) → USB cable
-  → game server: reads Chords packets, filters 0.5–45 Hz + 50/100 Hz notches, removes spikes,
+  → game server: reads Chords packets, filters 0.5–45 Hz + 50 Hz notch,
     measures theta/alpha/beta, engagement = beta / (alpha + theta),
     maps it to 0–100 % with your calibration (4 times a second)
   → game: low focus = shaking, blurring, lurching zombies;
@@ -237,7 +237,7 @@ talking to each other; use a phone hotspot instead.
 | Quality **FAIR** in the terminal / "Signal noisy" in the game, "Low mains hum" unchecked | Unplug the laptop charger, move away from power strips |
 | `BAD` with beta near 100 % and a huge `idx` | Wrong sample rate: set `--rate 500` / `SERIAL_RATE=500` for the Chords sketch. Run `pnpm sensor:check --port COM5 --raw` to see packets/s |
 | Focus stuck near 0 % or 100 % | Re-seat the electrodes and recalibrate (`--calibrate` in the terminal; in the game, calibration runs before the shift) |
-| Focus jumps around in a noisy hall | Keep the BioAmp cable short and away from power strips, phones and the laptop charger; twist the three leads together; run on battery. The server already drops spikes, notches 50/100 Hz and holds the score while the signal is bad |
+| Focus jumps around in a noisy hall | Keep the BioAmp cable short and away from power strips, phones and the laptop charger; twist the three leads together; run on battery. |
 | Focus jumps on every blink | Normal on the forehead; the game holds the score through blinks. Soft eyes help |
 | Game pauses with "Headset signal lost" | No data for 2.5 s (cable pulled or the port closed). It resumes by itself when data returns |
 | No hardware today | `.env`: `STATIONS=1=fake`, or operator console → Station → **fake**, with a slider to fake focus |

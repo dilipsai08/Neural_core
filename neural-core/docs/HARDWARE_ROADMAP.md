@@ -29,7 +29,7 @@ zombies on screen, and how to build, test and run that link at the event.
    │ raw ADC counts (bridges batch 10 samples per WebSocket message)
    ▼
  Neural Core server (Node)  apps/api/src/sensor
-   1. spike removal, band-pass 0.5–45 Hz, 50 Hz ×2 + 100 Hz notches (biquads)
+   1. band-pass 0.5–45 Hz + 50 Hz notch          (biquads)
    2. 2 s window, 0.25 s hop, Welch PSD           (Hann, 1 s segments, FFT 256)
    3. theta / alpha / beta / 30–45 Hz power
    4. engagement index = beta / (alpha + theta)
@@ -162,18 +162,12 @@ All constants live in `packages/shared/src/constants.ts`.
 
 1. **Centre and filter.** Subtract mid-scale, then a 2nd-order high-pass at
    0.5 Hz (removes electrode drift), two 2nd-order low-pass stages at 45 Hz,
-   two cascaded notches at 50 Hz (Q 20 and 35, so a drifting venue mains is
-   still caught) plus one at 100 Hz, its first harmonic (`MAINS_HZ=60` for
-   60 Hz countries). The output is held for 1.5 s while the filters settle.
-   **Before** the filters, a sample that jumps more than 8× the recent noise
-   level away from the median of the last 5 samples (a static discharge, a
-   cable knock, a phone transmitting next to the leads) is replaced by that
-   median, so the filters never ring on it.
+   and a Q=30 notch at 50 Hz (`MAINS_HZ=60` for 60 Hz countries). The output
+   is held for 1.5 s while the filters settle.
 2. **Window.** Keep the last 2 s (500 samples). Every 0.25 s (62 samples) run
    an analysis, giving 4 frames per second.
-3. **Spectrum.** Each 2 s window is clipped to median ± 5 robust std-devs
-   (any surviving impulse cannot flood every band), then Welch's method: 1 s
-   Hann segments with 50% overlap, zero-padded to a 256-point FFT, averaged.
+3. **Spectrum.** Welch's method: 1 s Hann segments with 50% overlap,
+   zero-padded to a 256-point FFT, averaged.
 4. **Bands.** theta 4–8, alpha 8–13, beta 13–30, "muscle" 30–45 Hz.
 5. **Engagement index** `beta / (alpha + theta)`. Rises with task
    engagement and falls with relaxation or drowsiness.
@@ -187,9 +181,7 @@ All constants live in `packages/shared/src/constants.ts`.
    (the EEG is unusable). Strong 50 Hz mains hum alone is `fair`: the notch
    removes it, so it warns instead of blocking. Otherwise `good`. The headset
    screen only lets a player continue on `good` (a volunteer override appears
-   after 20 s). While quality is `bad` the focus score is **held** at its last
-   value instead of following garbage, and the index fed to the score is the
-   median of the last 5 windows, so one noisy window cannot move it.
+   after 20 s).
 8. **Calibration** (15 s relax with the breathing beacon, then 15 s focus by
    counting down from 100 in sevens). Windows with artifacts or bad quality are
    dropped. `low` = 10th percentile of relax, `high` = 90th percentile of focus.
