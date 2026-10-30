@@ -12,3 +12,4 @@ Thumbs.db
 
 # Event data (ledger, raw recordings)
 data/
+node-compile-cache/
