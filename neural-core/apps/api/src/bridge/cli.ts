@@ -38,6 +38,7 @@ async function main() {
   let ws: WebSocket | null = null;
   let batch: number[] = [];
   let sent = 0;
+  let read = 0;
 
   const connectWs = () => {
     ws = new WebSocket(server);
@@ -49,12 +50,20 @@ async function main() {
       console.log("[bridge] server connection lost, retrying in 2 s");
       setTimeout(connectWs, 2000);
     });
-    ws.on("error", (e) => console.log(`[bridge] ${e.message}`));
+    ws.on("error", (e) => {
+      const hint = /ETIMEDOUT|EHOSTUNREACH/.test(e.message)
+        ? " (the server laptop is not answering on this port: check the port is 3001 and its firewall allows it)"
+        : /ECONNREFUSED/.test(e.message)
+          ? " (nothing is listening there: is pnpm dev running on the server laptop, with STATIONS=1=bridge?)"
+          : "";
+      console.log(`[bridge] ${e.message}${hint}`);
+    });
   };
   connectWs();
 
   const source = simulate ? new FakeSource() : new SerialSource({ path: portPath!, baud, rateHz, log: (m) => console.log(`[bridge] ${m}`) });
   source.onSample((s) => {
+    read += 1;
     batch.push(s.counts);
     if (batch.length < BRIDGE_BATCH_SAMPLES) return;
     if (ws?.readyState === WebSocket.OPEN) {
@@ -68,7 +77,11 @@ async function main() {
   if (simulate) console.log("[bridge] simulating a headset (synthetic EEG)");
 
   setInterval(() => {
-    console.log(`[bridge] ${sent} samples/5s (${(sent / 5).toFixed(0)} Hz to server)`);
+    // Board and network are reported separately, so a blocked server is not mistaken for a silent board.
+    const board = `board ${(read / 5).toFixed(0)} Hz`;
+    const net = ws?.readyState === WebSocket.OPEN ? `${(sent / 5).toFixed(0)} Hz to server` : `NOT connected to ${server} (samples dropped)`;
+    console.log(`[bridge] ${board} · ${net}`);
+    read = 0;
     sent = 0;
   }, 5000);
 }
