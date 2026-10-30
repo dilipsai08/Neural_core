@@ -69,6 +69,22 @@ describe("StreamDecoder", () => {
   });
 });
 
+describe("lost packets", () => {
+  it("fills short gaps from the packet counter so the time base stays right", () => {
+    const bytes: number[] = [];
+    for (let i = 0; i < 300; i++) {
+      if (i % 4 !== 0) continue; // only every 4th packet arrives
+      bytes.push(...chordsPacket(i, [8000 + i, 8000, 8000, 8000, 8000, 8000]));
+    }
+    const d = new StreamDecoder();
+    const out = d.push(Uint8Array.from(bytes));
+    expect(d.stats.lostPackets).toBeGreaterThan(200);
+    // Every original index is present again, linearly filled.
+    const tail = out.samples.slice(-8);
+    expect(tail).toEqual([8289, 8290, 8291, 8292, 8293, 8294, 8295, 8296]);
+  });
+});
+
 describe("RateAdapter", () => {
   function feed(rate: number) {
     const out: number[] = [];
@@ -90,5 +106,24 @@ describe("RateAdapter", () => {
     expect(a.rateHz).toBeLessThan(520);
     expect(a.factor).toBe(2);
     expect(out.every((v) => v === 100)).toBe(true);
+  });
+
+  it("resamples an unusual rate (134 Hz) to 250 Hz", () => {
+    const out: number[] = [];
+    const a = new RateAdapter((c) => out.push(c));
+    let t = 0;
+    let i = 0;
+    for (; t <= 6000; t += 50) {
+      const n = Math.round(((t + 50) * 134) / 1000) - Math.round((t * 134) / 1000);
+      a.push(Array.from({ length: n }, () => i++), t);
+    }
+    expect(a.mode).toBe("resample");
+    // Output count ≈ input count × 250/134 for everything after the warm-up.
+    const ratio = out.length / (i - 67);
+    expect(ratio).toBeGreaterThan(1.8);
+    expect(ratio).toBeLessThan(1.95);
+    // A ramp stays a ramp: output steps are ≈ 134/250 of an input step.
+    const steps = out.slice(10, 50).map((v, k, arr) => (k ? v - arr[k - 1]! : 0)).slice(1);
+    expect(Math.max(...steps)).toBeLessThanOrEqual(1);
   });
 });

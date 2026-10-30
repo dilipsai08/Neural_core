@@ -27,6 +27,8 @@ const SYNC2 = 0x7c;
 const END = 0x01;
 const MAX_CHANNELS = 16;
 const DETECT_LIMIT = 4096;
+/** Largest run of lost packets that is filled by interpolation. */
+const MAX_FILL = 64;
 
 export class StreamDecoder {
   protocol: Protocol = "unknown";
@@ -38,6 +40,13 @@ export class StreamDecoder {
   private bigEndian = true;
   private seenMax = 0;
   private rangeSamples = 0;
+  private lastCounter: number | null = null;
+  private lastValue: number | null = null;
+  /** Running totals for diagnostics (pnpm sensor:check --raw). */
+  readonly stats = { packets: 0, skippedBytes: 0, lostPackets: 0 };
+  get byteOrder(): "big-endian" | "little-endian" {
+    return this.bigEndian ? "big-endian" : "little-endian";
+  }
 
   push(chunk: Uint8Array): DecodedBatch {
     const out: DecodedBatch = { samples: [], bits: null, header: null };
@@ -134,13 +143,28 @@ export class StreamDecoder {
         const hi = b[p + 3]!;
         const lo = b[p + 4]!;
         const v = this.bigEndian ? (hi << 8) | lo : (lo << 8) | hi;
+        const counter = b[p + 2]!;
+        if (this.lastCounter !== null) {
+          const lost = (counter - this.lastCounter - 1 + 256) % 256;
+          this.stats.lostPackets += lost;
+          // Packets dropped on the way in: fill the gap so the time base (and so
+          // every frequency) stays right. Long gaps are left alone.
+          if (lost > 0 && lost <= MAX_FILL && this.lastValue !== null) {
+            for (let k = 1; k <= lost; k++) out.samples.push(Math.round(this.lastValue + ((v - this.lastValue) * k) / (lost + 1)));
+          }
+        }
+        this.lastCounter = counter;
+        this.lastValue = v;
         out.samples.push(v);
         this.trackRange(v, out);
+        this.stats.packets += 1;
         p += len;
       } else {
         // Lost framing (a dropped byte): resync on the next sync pair.
+        const from = p;
         p += 1;
         while (p + 1 < b.length && !(b[p] === SYNC1 && b[p + 1] === SYNC2)) p += 1;
+        this.stats.skippedBytes += p - from;
       }
     }
     this.buf = b.slice(p);
@@ -176,19 +200,27 @@ export class StreamDecoder {
 }
 
 /**
- * Brings any input rate down to the 250 Hz the focus pipeline expects.
- * The first 2 s are used to measure the real rate (Chords on the UNO R4
- * streams 500 Hz, the Neural Core sketch 250 Hz); after that, every k
- * samples are averaged into one, which also acts as a light low-pass filter.
+ * Converts any input rate to the 250 Hz the focus pipeline expects. The first
+ * 2 s (after a 0.5 s warm-up) measure the real rate. A whole multiple of 250
+ * (Chords on the UNO R4 streams 500 Hz) is reduced by averaging every k
+ * samples, which also acts as a light low-pass filter. Any other rate is
+ * resampled by linear interpolation, so frequencies stay correct even if the
+ * board runs at an unexpected speed.
  */
 export class RateAdapter {
   rateHz: number | null = null;
   factor = 1;
+  /** "average" for whole multiples of the target, "resample" otherwise. */
+  mode: "average" | "resample" = "average";
   private firstAt: number | null = null;
   private startedAt: number | null = null;
   private pending: number[] = [];
   private acc = 0;
   private n = 0;
+  // resampling state
+  private step = 1;
+  private pos = 0;
+  private prev: number | null = null;
 
   constructor(
     private readonly emit: (counts: number) => void,
@@ -207,7 +239,16 @@ export class RateAdapter {
       const elapsed = nowMs - this.startedAt;
       if (elapsed < this.measureMs) return;
       this.rateHz = Math.round((this.pending.length / elapsed) * 1000);
-      this.factor = Math.max(1, Math.round(this.rateHz / this.target));
+      const k = Math.max(1, Math.round(this.rateHz / this.target));
+      const nearMultiple = Math.abs(this.rateHz - k * this.target) <= this.target * 0.12;
+      if (nearMultiple) {
+        this.mode = "average";
+        this.factor = k;
+      } else {
+        this.mode = "resample";
+        this.factor = 1;
+        this.step = this.rateHz / this.target;
+      }
       const backlog = this.pending;
       this.pending = [];
       for (const s of backlog) this.one(s);
@@ -217,6 +258,22 @@ export class RateAdapter {
   }
 
   private one(s: number): void {
+    if (this.mode === "resample") {
+      // Output sample j sits at input position j * step; interpolate between neighbours.
+      if (this.prev === null) {
+        this.prev = s;
+        this.emit(s);
+        this.pos = this.step;
+        return;
+      }
+      while (this.pos <= 1) {
+        this.emit(Math.round(this.prev + (s - this.prev) * this.pos));
+        this.pos += this.step;
+      }
+      this.pos -= 1;
+      this.prev = s;
+      return;
+    }
     this.acc += s;
     this.n += 1;
     if (this.n >= this.factor) {
@@ -229,10 +286,14 @@ export class RateAdapter {
   reset(): void {
     this.rateHz = null;
     this.factor = 1;
+    this.mode = "average";
     this.firstAt = null;
     this.startedAt = null;
     this.pending = [];
     this.acc = 0;
     this.n = 0;
+    this.step = 1;
+    this.pos = 0;
+    this.prev = null;
   }
 }

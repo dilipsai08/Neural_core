@@ -119,8 +119,16 @@ export class SerialSource implements FocusSource {
       if (before === null && rate.rateHz !== null) {
         this.inputRateHz = rate.rateHz;
         this.opts.log(
-          `serial ${this.opts.path}: ${rate.rateHz} Hz in${rate.factor > 1 ? `, averaging every ${rate.factor} samples to 250 Hz` : ""}`,
+          `serial ${this.opts.path}: ${rate.rateHz} Hz in` +
+            (rate.mode === "resample"
+              ? `: unusual rate, resampling to 250 Hz (expected 250 or 500; run pnpm sensor:check --raw to see why)`
+              : rate.factor > 1
+                ? `, averaging every ${rate.factor} samples to 250 Hz`
+                : ""),
         );
+        if (decoder.stats.lostPackets > 0) {
+          this.opts.log(`serial ${this.opts.path}: ${decoder.stats.lostPackets} packets lost in transit so far (gaps are filled)`);
+        }
       }
     });
 
