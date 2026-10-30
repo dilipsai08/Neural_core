@@ -193,6 +193,36 @@ frowning show up on forehead electrodes.
 
 ---
 
+## 6b. Two laptops: one for the Arduino, one for the game
+
+Everything above uses one laptop. You can also split it: **Laptop H** has the
+Arduino plugged in, **Laptop G** runs the game. Laptop H runs a small bridge
+that forwards the raw samples over Wi-Fi; Laptop G does all the processing.
+
+1. Put both laptops on the **same Wi-Fi or hotspot**.
+2. On **Laptop G**, find its IP address: `ipconfig` (Windows; IPv4 Address,
+   e.g. `192.168.1.20`) or `ipconfig getifaddr en0` (Mac).
+3. On **Laptop G**, in `.env` set `STATIONS=1=bridge`, then run `pnpm dev`.
+   The first time, Windows asks whether Node.js may use the network: tick
+   **Private networks** and click **Allow**.
+4. On **Laptop H** (it also needs Node, pnpm, the project and `pnpm install`;
+   no `.env` needed), close Chords and the Arduino Serial Monitor, then run:
+
+   ```bash
+   pnpm bridge --port COM5 --baud 230400 --server ws://192.168.1.20:3001/ws --station 1
+   ```
+
+   You should see `Chords firmware … @ 230400 baud`, `connected to ws://…`, and
+   every 5 s `… (250 Hz to server)`. You can still check the signal on Laptop H
+   first with `pnpm sensor:check --port COM5 --baud 230400`.
+5. Play on **Laptop G** at `http://localhost:3000`. The headset screen and the
+   operator console show the station as *bridge · Bridge 192.168.1.x*.
+
+If the bridge says `ECONNREFUSED` or keeps retrying: check the IP, that both are
+on the same network, and the firewall prompt (Windows Defender Firewall → Allow
+an app → Node.js → Private). Public/guest Wi-Fi often blocks laptops from
+talking to each other; use a phone hotspot instead.
+
 ## 7. If something is off
 
 | Symptom | Fix |
