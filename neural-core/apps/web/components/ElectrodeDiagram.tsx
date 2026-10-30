@@ -1,12 +1,12 @@
 import styles from "./ElectrodeDiagram.module.css";
 
 /**
- * Electrode placement for forehead EEG with the BioAmp band:
- * IN+ on the forehead (Fp1/Fp2), IN− and REF on the bony bumps behind the ears.
+ * Electrode placement for forehead EEG: IN+ above the left eyebrow (Fp1),
+ * IN− above the right eyebrow (Fp2), REF on the bone behind the ear.
  */
 export function ElectrodeDiagram() {
   return (
-    <svg viewBox="0 0 420 340" className={styles.svg} role="img" aria-label="Electrode placement: forehead, and behind both ears">
+    <svg viewBox="0 0 420 340" className={styles.svg} role="img" aria-label="Electrode placement: IN+ left forehead, IN− right forehead, REF behind the ear">
       {/* head in profile, facing right */}
       <path
         className={styles.head}
@@ -21,21 +21,21 @@ export function ElectrodeDiagram() {
       <circle className={styles.core} cx="268" cy="96" r="4" />
       <path className={styles.lead} d="M279 96h22" />
       <text className={styles.tag} x="306" y="92">IN+</text>
-      <text className={styles.caption} x="306" y="108">Forehead · Fp1</text>
+      <text className={styles.caption} x="306" y="108">Left forehead · Fp1</text>
 
       {/* mastoid behind ear */}
       <circle className={styles.electrode} cx="140" cy="214" r="11" />
       <circle className={styles.core} cx="140" cy="214" r="4" />
       <path className={styles.lead} d="M129 214H40" />
-      <text className={styles.tag} x="40" y="200">IN−</text>
-      <text className={styles.caption} x="40" y="236">Behind left ear</text>
+      <text className={styles.tag} x="40" y="200">REF</text>
+      <text className={styles.caption} x="40" y="236">Bone behind the ear</text>
 
       <g className={styles.inset}>
         <rect x="24" y="262" width="196" height="58" rx="8" />
         <circle className={styles.electrode} cx="50" cy="291" r="9" />
         <circle className={styles.core} cx="50" cy="291" r="3.5" />
-        <text className={styles.tag} x="68" y="288">REF</text>
-        <text className={styles.caption} x="68" y="306">Behind right ear</text>
+        <text className={styles.tag} x="68" y="288">IN−</text>
+        <text className={styles.caption} x="68" y="306">Right forehead · Fp2</text>
       </g>
     </svg>
   );

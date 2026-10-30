@@ -384,7 +384,7 @@ export class Station {
       id: this.id,
       label: this.label,
       source: this.sourceKind,
-      sourceDetail: this.sourceDetail,
+      sourceDetail: this.source instanceof SerialSource ? this.source.describe() : this.sourceDetail,
       connected: this.isConnected(),
       quality: this.isConnected() ? this.quality : "bad",
       lastFrameAt: this.lastFrameAt,

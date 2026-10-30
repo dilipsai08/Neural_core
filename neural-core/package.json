@@ -11,7 +11,8 @@
     "bridge": "pnpm --filter @neural-core/api bridge",
     "typecheck": "pnpm --filter @neural-core/shared build && pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "test": "pnpm --filter @neural-core/shared build && pnpm -r test"
+    "test": "pnpm --filter @neural-core/shared build && pnpm -r test",
+    "sensor:check": "pnpm --filter @neural-core/api sensor:check"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

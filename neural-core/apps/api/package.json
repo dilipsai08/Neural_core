@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "bridge": "tsx src/bridge/cli.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sensor:check": "tsx src/tools/sensor-check.ts"
   },
   "dependencies": {
     "@neural-core/shared": "workspace:*",

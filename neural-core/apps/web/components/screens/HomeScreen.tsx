@@ -17,7 +17,7 @@ import { useLeaderboard } from "@/lib/useLeaderboard";
 import styles from "./HomeScreen.module.css";
 
 const STEPS = [
-  { n: "01", title: "Wear the headset", body: "A volunteer fits one sensor on your forehead and two behind your ears." },
+  { n: "01", title: "Wear the headset", body: "A volunteer fits two sensors on your forehead and one behind your ear." },
   { n: "02", title: "Tune the arc", body: `${CALIBRATION_RELAX_S + CALIBRATION_FOCUS_S} seconds: breathe slowly, then count down in sevens.` },
   { n: "03", title: "Hold the line", body: `${ROUND_DURATION_S} seconds. Click to fire. Stay calm and the targets hold still.` },
 ];

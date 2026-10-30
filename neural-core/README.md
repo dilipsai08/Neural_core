@@ -14,6 +14,7 @@ BioAmp EXG Pill → Arduino UNO R4 (250 Hz) → USB → Node server (DSP → foc
       → WebSocket 4 Hz → three.js game on each kiosk → verified runs → live leaderboard
 ```
 
+- **Connect your headset (start here):** [`docs/EEG_SETUP_GUIDE.md`](docs/EEG_SETUP_GUIDE.md)
 - **Hardware link, DSP and tuning:** [`docs/HARDWARE_ROADMAP.md`](docs/HARDWARE_ROADMAP.md)
 - **Firmware:** [`firmware/`](firmware/README.md)
 

@@ -82,12 +82,13 @@ Plug the BioAmp cable into the Pill's JST PH connector.
 
 | Lead | Where | Why |
 |---|---|---|
-| IN+ | Forehead, about 2 cm above the left eyebrow (Fp1) | Prefrontal activity, where engagement-related beta shows up |
-| IN− | Bony bump behind the **left** ear (mastoid) | Quiet reference with little brain signal |
-| REF | Bony bump behind the **right** ear (mastoid) | Body reference / ground |
+| IN+ | Forehead, about 2 cm above the **left** eyebrow (Fp1) | Prefrontal activity, where engagement-related beta shows up |
+| IN− | Forehead, about 2 cm above the **right** eyebrow (Fp2) | Second forehead site; the Pill records the difference between the two |
+| REF | Bony bump behind the ear (mastoid) | Body reference |
 
 Lead colours vary between cable versions. Check the IN+/IN−/REF markings on
 your cable or the Upside Down Labs guide (QR code on the kit card).
+Step-by-step fitting is in [`EEG_SETUP_GUIDE.md`](EEG_SETUP_GUIDE.md).
 
 Skin prep matters more than anything else: a pea-sized dab of Nuprep, rub 5–10 s
 with a cotton swab, wipe with alcohol, let it dry, then apply the gel electrode.
@@ -97,9 +98,20 @@ chargers inject 50 Hz hum that can swamp a forehead EEG.
 
 ---
 
-## 3. Firmware (`firmware/neural_core_streamer`)
+## 3. Firmware
 
-What it does:
+Two firmwares work, and the server tells them apart automatically:
+
+| Firmware | Format | Rate | Baud |
+|---|---|---|---|
+| **Chords firmware** (Upside Down Labs, the one the Chords web visualiser uses) | binary packets `C7 7C counter ch0..chN 01`, A0 = channel 0 | 500 Hz on the UNO R4, averaged to 250 Hz | 230400 |
+| **`firmware/neural_core_streamer`** (this repo) | one number per line | 250 Hz | 115200 |
+
+If you already see your signal in Chords, keep that firmware and set
+`SERIAL_BAUD=230400`. The server sends `START` to begin streaming and `STOP`
+when it closes the port.
+
+The Neural Core sketch:
 
 - `analogReadResolution(14)` on the R4 (0–16383, mid-scale ≈ 8192).
 - A `micros()`-paced loop samples A0 at exactly **250 Hz** and resyncs after USB stalls.
