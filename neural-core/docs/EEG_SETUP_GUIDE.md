@@ -226,6 +226,14 @@ on the same network, and the firewall prompt (Windows Defender Firewall → Allo
 an app → Node.js → Private). Public/guest Wi-Fi often blocks laptops from
 talking to each other; use a phone hotspot instead.
 
+**Leaderboard screen on Laptop H.** Open `http://<G-IP>:4000` in Chrome on H
+(F11 for full screen). It updates by itself after every game. Laptop G's
+firewall must allow port 4000 as well as 3001 (PowerShell as Administrator):
+
+```powershell
+New-NetFirewallRule -DisplayName "Neural Core" -Direction Inbound -Protocol TCP -LocalPort 3001,4000 -Action Allow -Profile Any
+```
+
 ## 7. If something is off
 
 | Symptom | Fix |

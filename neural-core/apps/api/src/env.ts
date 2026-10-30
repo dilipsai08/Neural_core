@@ -38,6 +38,8 @@ const envSchema = z.object({
   DATABASE_URL: z.string().default(""),
   PORT: z.coerce.number().int().default(3001),
   HOST: z.string().default("0.0.0.0"),
+  /** Leaderboard display screen (open http://<this laptop>:DISPLAY_PORT). 0 = off. */
+  DISPLAY_PORT: z.coerce.number().int().min(0).default(4000),
   OPERATOR_PIN: z.string().min(4).default("2468"),
   DATA_DIR: z.string().default(path.join(root, "data")),
   WEB_DIST: z.string().default(path.join(root, "apps/web/out")),

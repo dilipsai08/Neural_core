@@ -97,6 +97,20 @@ pnpm bridge --port COM5 --server ws://SERVER:3001/ws --station 2
 No hardware yet? `STATIONS="1=fake"` (the default) runs synthetic EEG through
 the real pipeline, and the operator console has a focus slider.
 
+## Leaderboard display screen
+
+The game server also serves a full-screen leaderboard for a second monitor
+or laptop on its own port, **`http://localhost:4000`** (`DISPLAY_PORT`). From
+another laptop open `http://<game laptop IP>:4000`.
+
+- Top 10 with the NIT Warangal, EES and Technozion logos; names and scores only.
+- **No polling.** The page keeps one WebSocket open. When a shift finishes the
+  server builds the board once, from its ledger (the same data the online
+  database mirrors, so no database query), and pushes it to every screen.
+- Changes animate: rows slide to their new rank, a new entry slides in and
+  glows, scores count up, and a "Shift complete" banner names the player.
+- Kiosk mode: `chrome --kiosk http://localhost:4000` (F11 in any browser).
+
 ## Develop
 
 ```bash

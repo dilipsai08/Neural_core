@@ -9,6 +9,7 @@ import { createContext } from "./context.js";
 import { Store } from "./store/store.js";
 import { LeaderboardDb } from "./store/pg.js";
 import { Hub } from "./ws/index.js";
+import { DisplayServer } from "./display/server.js";
 import { publicRouter } from "./routes/public.js";
 import { operatorRouter } from "./routes/operator.js";
 
@@ -49,6 +50,12 @@ const server = createServer(app);
 ctx.hub.statusProvider = () => [...ctx.stations.values()].map((s) => s.status());
 ctx.hub.attach(server);
 
+const display = env.DISPLAY_PORT ? new DisplayServer(ctx) : null;
+if (display) {
+  ctx.hub.onLeaderboardChanged = (runId) => display.changed(runId);
+  display.start(env.DISPLAY_PORT, env.HOST);
+}
+
 for (const spec of env.STATIONS) {
   const station = ctx.station(spec.id);
   const opts = spec.source === "serial" ? { port: spec.arg ?? undefined } : spec.source === "replay" ? { file: spec.arg ?? undefined } : {};
@@ -70,6 +77,7 @@ server.listen(env.PORT, env.HOST, () => {
 
 async function shutdown() {
   ctx.hub.close();
+  display?.close();
   await Promise.all([...ctx.stations.values()].map((s) => s.dispose()));
   await ctx.db?.close().catch(() => undefined);
   server.close();

@@ -27,6 +27,8 @@ export class Hub implements StationHub {
   private heartbeat: ReturnType<typeof setInterval> | null = null;
   /** Supplies current station statuses so a new client is up to date at once. */
   statusProvider: () => StationStatus[] = () => [];
+  /** Called whenever the board may have changed; runId is set when a shift just finished. */
+  onLeaderboardChanged: (runId?: number) => void = () => undefined;
 
   constructor(private readonly onBridge: BridgeHandler, private readonly log: (m: string) => void) {}
 
@@ -121,8 +123,9 @@ export class Hub implements StationHub {
     this.send(this.forStation(station), { type: "command", station, action });
   }
 
-  leaderboardChanged(): void {
+  leaderboardChanged(runId?: number): void {
     this.send((c) => c.role !== "bridge", { type: "leaderboard:update" });
+    this.onLeaderboardChanged(runId);
   }
 
   connections(): Array<{ role: Role; station: number | null; addr: string }> {

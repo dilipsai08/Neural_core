@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Neural Core Leaderboard</title>
+    <link rel="stylesheet" href="display.css" />
+  </head>
+  <body>
+    <div class="screen">
+      <header class="head">
+        <div class="logos">
+          <img class="logo logo-nitw" src="brand/nitw.png" alt="NIT Warangal" />
+          <span class="sep"></span>
+          <img class="logo logo-ees" src="brand/ees.png" alt="Electrical Engineering Society" />
+          <span class="sep"></span>
+          <img class="logo logo-tz" src="brand/technozion.png" alt="Technozion" />
+        </div>
+        <div class="heading">
+          <span class="kicker">Electrical Engineering Society presents</span>
+          <h1>Neural Core <span class="thin">Leaderboard</span></h1>
+        </div>
+        <div class="stat">
+          <span class="stat-value num" id="total">0</span>
+          <span class="stat-label">players ranked</span>
+        </div>
+      </header>
+
+      <div class="rule"><span></span></div>
+
+      <div class="cols" aria-hidden="true">
+        <span>Rank</span>
+        <span>Player</span>
+        <span class="r">Avg focus</span>
+        <span class="r">Best chain</span>
+        <span class="r">Score</span>
+      </div>
+
+      <main class="board">
+        <ol id="rows" class="rows"></ol>
+        <p id="empty" class="empty" hidden>No shifts logged yet. The first name on the board could be yours.</p>
+      </main>
+
+      <footer class="foot">
+        <span>Organised by the Electrical Engineering Society · NIT Warangal · Technozion</span>
+        <span class="link"><i id="dot" class="dot"></i><span id="linkText">Connecting</span></span>
+      </footer>
+
+      <div id="banner" class="banner" hidden>
+        <span class="banner-kicker">Shift complete</span>
+        <span class="banner-name" id="bName"></span>
+        <span class="banner-score num" id="bScore"></span>
+        <span class="banner-rank" id="bRank"></span>
+      </div>
+    </div>
+    <script src="display.js"></script>
+  </body>
+</html>

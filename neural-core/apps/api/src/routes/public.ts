@@ -229,7 +229,7 @@ export function publicRouter(ctx: AppContext): Router {
         station.broadcastStatus();
       }
       ctx.log(`run #${run.id} ${status} score ${out.stats.score} (client ${body.clientScore})${verification.ok ? "" : " ⚠ check"}`);
-      ctx.hub.leaderboardChanged();
+      ctx.hub.leaderboardChanged(body.aborted ? undefined : run.id);
       res.json({ runId: run.id, status, stats: out.stats, verification });
     }),
   );
