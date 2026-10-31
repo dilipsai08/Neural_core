@@ -6,9 +6,9 @@
  * Wiring (from the kit card):
  *   BioAmp VCC -> 5V
  *   BioAmp GND -> GND
- *   BioAmp OUT -> A0
+ *   BioAmp OUT -> A1   (A0 on our board is faulty)
  *
- * The firmware stays dumb on purpose: it samples A0 at a fixed 250 Hz and
+ * The firmware stays dumb on purpose: it samples A1 at a fixed 250 Hz and
  * prints one integer per line. All filtering, FFT and scoring run in the
  * Neural Core server, where they are tested and can be tuned without
  * reflashing.
@@ -23,7 +23,7 @@
 
 #define SAMPLE_RATE_HZ 250
 #define BAUD_RATE      115200
-#define INPUT_PIN      A0
+#define INPUT_PIN      A1
 
 #if defined(ARDUINO_UNOR4_MINIMA) || defined(ARDUINO_UNOR4_WIFI)
   #define ADC_BITS 14

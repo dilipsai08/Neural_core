@@ -16,9 +16,9 @@ zombies on screen, and how to build, test and run that link at the event.
    │  IN+ (Fp1)  IN− (left mastoid)  REF (right mastoid)
    ▼
  BioAmp EXG Pill  ── analog µV-level EEG, amplified, centred at VCC/2
-   │  OUT → A0
+   │  OUT → A1   (A0 on our board is faulty)
    ▼
- Arduino UNO R4  ── samples A0 at 250 Hz, 14-bit, prints one integer per line
+ Arduino UNO R4  ── samples A1 at 250 Hz, 14-bit, prints one integer per line
    │  USB serial 115200
    ▼
  ┌─────────────── one of ───────────────┐
@@ -70,7 +70,7 @@ Wiring, exactly as on the kit card:
 BioAmp EXG Pill   Arduino UNO R4
 VCC  ───────────► 5V
 GND  ───────────► GND
-OUT  ───────────► A0
+OUT  ───────────► A1   (A0 on our board is faulty)
 ```
 
 ⚠ **Never swap VCC and GND.** The Pill is destroyed instantly. Double-check
@@ -104,7 +104,7 @@ Two firmwares work, and the server tells them apart automatically:
 
 | Firmware | Format | Rate | Baud |
 |---|---|---|---|
-| **Chords firmware** (Upside Down Labs, the one the Chords web visualiser uses) | binary packets `C7 7C counter ch0..chN 01`, A0 = channel 0 | 500 Hz on the UNO R4, averaged to 250 Hz | 230400 |
+| **Chords firmware** (Upside Down Labs, the one the Chords web visualiser uses) | binary packets `C7 7C counter ch0..chN 01`, A1 = channel 0 in our build (`firmware/chords_uno_r4`) | 500 Hz on the UNO R4, averaged to 250 Hz | 230400 |
 | **`firmware/neural_core_streamer`** (this repo) | one number per line | 250 Hz | 115200 |
 
 If you already see your signal in Chords, keep that firmware and set
@@ -114,7 +114,7 @@ when it closes the port.
 The Neural Core sketch:
 
 - `analogReadResolution(14)` on the R4 (0–16383, mid-scale ≈ 8192).
-- A `micros()`-paced loop samples A0 at exactly **250 Hz** and resyncs after USB stalls.
+- A `micros()`-paced loop samples A1 at exactly **250 Hz** and resyncs after USB stalls.
 - Prints one integer per line at **115200 baud**, with a header line
   `#NC1 fs=250 bits=14 board=UNO_R4` on boot and whenever it receives `i`.
 

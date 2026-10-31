@@ -1,4 +1,4 @@
-// ─── Hardware: BioAmp EXG Pill → Arduino UNO R4 (A0) → USB serial ─────────
+// ─── Hardware: BioAmp EXG Pill → Arduino UNO R4 (A1) → USB serial ─────────
 export const SAMPLE_RATE_HZ = 250;
 /** UNO R4 ADC is set to 14-bit in firmware (analogReadResolution(14)). */
 export const ADC_BITS_DEFAULT = 14;

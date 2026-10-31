@@ -5,7 +5,7 @@ your own focus. No Python is needed: the game server (Node) reads the Arduino
 over USB, filters the EEG and turns it into a focus percentage in real time.
 
 ```
-Electrodes → BioAmp EXG Pill → Arduino UNO R4 (A0) → USB cable
+Electrodes → BioAmp EXG Pill → Arduino UNO R4 (A1) → USB cable
   → game server: reads Chords packets, filters 0.5–45 Hz + 50 Hz notch,
     measures theta/alpha/beta, engagement = beta / (alpha + theta),
     maps it to 0–100 % with your calibration (4 times a second)
@@ -21,7 +21,7 @@ The focus score is a relative game metric, not a medical measurement.
 
 From the DIY Neuroscience Kit Pro:
 
-- BioAmp EXG Pill, wired to the **Arduino UNO R4**: VCC → 5V, GND → GND, OUT → A0
+- BioAmp EXG Pill, wired to the **Arduino UNO R4**: VCC → 5V, GND → GND, **OUT → A1** (A0 on our board is faulty; flash `firmware/chords_uno_r4`)
 - BioAmp cable (3 leads: IN+, IN−, REF)
 - 3 gel electrodes (or the BioAmp band), Nuprep skin-prep gel, alcohol wipes / cotton
 - USB cable to the laptop that runs the game
@@ -97,7 +97,7 @@ detected automatically over the first ~8 s.) Within a few seconds you should see
 
 ```
   serial COM5: open @ 230400 baud
-  serial COM5: Chords firmware, 6 channels (using A0) @ 230400 baud
+  serial COM5: Chords firmware, 6 channels (using channel 0 = A1) @ 230400 baud
   serial COM5: 500 Hz in, averaging every 2 samples to 250 Hz
 GOOD θ 34% α 49% β 17% hi  0%  idx 0.19  focus ██······  8%
 ```
@@ -150,7 +150,7 @@ The server terminal should show the same detection lines as in step 4:
 
 ```
 [neural-core] Station 01: source → serial COM5 @ 230400
-[neural-core] serial COM5: Chords firmware, 6 channels (using A0) @ 230400 baud
+[neural-core] serial COM5: Chords firmware, 6 channels (using channel 0 = A1) @ 230400 baud
 [neural-core] serial COM5: 500 Hz in, averaging every 2 samples to 250 Hz
 ```
 

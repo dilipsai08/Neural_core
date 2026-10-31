@@ -123,7 +123,7 @@ export class SerialSource implements FocusSource {
         if (this.startTimer) clearInterval(this.startTimer);
         this.baudIndex = this.bauds.indexOf(this.baud);
         this.opts.log(
-          `serial ${this.opts.path}: ${decoder.protocol === "chords" ? `Chords firmware, ${decoder.channels} channels (using A0)` : "Neural Core sketch"} @ ${this.baud} baud`,
+          `serial ${this.opts.path}: ${decoder.protocol === "chords" ? `Chords firmware, ${decoder.channels} channels (using channel 0 = A1)` : "Neural Core sketch"} @ ${this.baud} baud`,
         );
       }
       if (out.header) this.opts.log(`serial ${this.opts.path}: firmware ${out.header}`);

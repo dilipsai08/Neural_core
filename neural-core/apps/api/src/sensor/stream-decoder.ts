@@ -11,7 +11,7 @@ import { parseSerialLine } from "./serial-protocol.js";
  *             0xC7 0x7C <counter> <ch0 hi> <ch0 lo> ... <chN hi> <chN lo> 0x01
  *           The channel count and byte order are worked out from the data.
  *
- * Only channel 0 (A0, where the BioAmp EXG Pill OUT is wired) is used.
+ * Only channel 0 is used; our firmware samples it from A1, where the BioAmp EXG Pill OUT is wired.
  */
 export type Protocol = "unknown" | "text" | "chords";
 

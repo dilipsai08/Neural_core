@@ -8,7 +8,7 @@
  *   pnpm sensor:check --port COM5 --calibrate   20 s relax + 20 s focus first, then live
  *   pnpm sensor:check --simulate                no hardware: synthetic EEG
  *   pnpm sensor:check --port COM5 --rate 500    skip rate detection (Chords on the UNO R4 is 500 Hz)
- *   pnpm sensor:check --port COM5 --raw         transport diagnostics: bytes, packets, losses, A0 range
+ *   pnpm sensor:check --port COM5 --raw         transport diagnostics: bytes, packets, losses, signal (A1) range
  */
 import {
   CALIBRATION_FOCUS_S,
@@ -203,7 +203,7 @@ function rawDiagnostics(path: string, baud: number): void {
       console.log(
         `  ${String(bytes).padStart(6)} B/s · ${decoder.protocol}${decoder.channels ? ` ${decoder.channels}ch ${decoder.byteOrder}` : ""}` +
           ` · packets ${d.packets}/s · lost ${d.lostPackets}/s · skipped ${d.skippedBytes} B/s` +
-          ` · A0 min ${mn} mean ${mean} max ${mx} (of ${max}) · at rail ${Math.round(railed * 100)}%`,
+          ` · A1 min ${mn} mean ${mean} max ${mx} (of ${max}) · at rail ${Math.round(railed * 100)}%`,
       );
       if (seconds % 5 === 0) verdict(bytes, d, mn, mx, mean, max, railed, decoder.protocol, totalBytes);
       bytes = 0;
@@ -232,12 +232,12 @@ function verdict(
     return say(`BOARD: only ${d.packets} packets/s arrive with no losses, so the sketch itself is running slower than 500 Hz.`);
   }
   if (railed > 0.05 || mx - mn > max * 0.8) {
-    return say("HARDWARE: transport is fine (≈500 packets/s, no losses) but A0 hits the rails. Check electrodes on skin, cable in the Pill, VCC→5V, GND→GND, OUT→A0.");
+    return say("HARDWARE: transport is fine (≈500 packets/s, no losses) but A1 hits the rails. Check electrodes on skin, cable in the Pill, VCC→5V, GND→GND, OUT→A1.");
   }
   if (Math.abs(mean - max / 2) > max * 0.25) {
-    return say("HARDWARE: transport is fine but A0 sits far from mid-scale. Check the Pill's wiring and power.");
+    return say("HARDWARE: transport is fine but A1 sits far from mid-scale. Check the Pill's wiring and power.");
   }
-  return say(`ALL GOOD: ≈${d.packets} packets/s, no losses, A0 around ${mean} (mid-scale) and within range. Run without --raw now.`);
+  return say(`ALL GOOD: ≈${d.packets} packets/s, no losses, A1 around ${mean} (mid-scale) and within range. Run without --raw now.`);
 }
 
 void main();

@@ -22,7 +22,7 @@ function chordsStream(count: number, channels: number, littleEndian = false): { 
 }
 
 describe("StreamDecoder", () => {
-  it("decodes the Chords 6-channel binary stream and keeps channel A0", () => {
+  it("decodes the Chords 6-channel binary stream and keeps channel 0 (the signal pin)", () => {
     const { bytes, a0 } = chordsStream(400, 6);
     const d = new StreamDecoder();
     const samples: number[] = [];
