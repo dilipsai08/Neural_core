@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CALIBRATION_FOCUS_S, CALIBRATION_RELAX_S, type Calibration } from "@neural-core/shared";
+import {
+  CALIBRATION_FOCUS_S,
+  CALIBRATION_HIGH_PERCENTILE,
+  CALIBRATION_LOW_PERCENTILE,
+  CALIBRATION_MIN_SPAN,
+  CALIBRATION_RELAX_S,
+  mapFocusScore,
+  percentile,
+  type Calibration,
+} from "@neural-core/shared";
 import { Button } from "@/components/Button";
 import { FocusGauge } from "@/components/FocusGauge";
 import { Icon } from "@/components/Icon";
@@ -9,7 +18,7 @@ import { Panel } from "@/components/Panel";
 import { TopBar } from "@/components/TopBar";
 import { api } from "@/lib/api";
 import { audio } from "@/lib/audio";
-import { useCalibrationMessages, useCommands, useFocus, useStationStatus } from "@/lib/link";
+import { useCalibrationMessages, useCommands, useFocus, useSignal, useStationStatus } from "@/lib/link";
 import { useIdleReset, useKiosk } from "@/lib/useKiosk";
 import k from "./Kiosk.module.css";
 import styles from "./CalibrateScreen.module.css";
@@ -21,6 +30,47 @@ const PHASES = [
   { key: "focus", title: "Focus", seconds: CALIBRATION_FOCUS_S, body: "Count down from 100 in sevens, silently: 100, 93, 86 and on." },
 ] as const;
 
+/** Signal frames (2 Hz) needed before the needle can be placed on the player's own range. */
+const OWN_RANGE_MIN_FRAMES = 4;
+/** Last 60 s of readings. */
+const OWN_RANGE_MAX_FRAMES = 120;
+
+/**
+ * Until calibration finishes the server scores focus against a default range,
+ * which can pin the needle near 100. While learning, place the needle on this
+ * player's own readings so far instead (same 10th–90th percentile rule the
+ * calibration uses). Display only: calibration itself is computed on the server.
+ */
+function useOwnRangeFocus(station: number, learning: boolean): number | null {
+  const signal = useSignal(station);
+  const seen = useRef<number[]>([]);
+  const lastT = useRef(0);
+  const smooth = useRef<number | null>(null);
+  const [value, setValue] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!learning || !signal || signal.t === lastT.current || signal.quality === "bad") return;
+    lastT.current = signal.t;
+    const s = seen.current;
+    s.push(signal.index);
+    if (s.length > OWN_RANGE_MAX_FRAMES) s.shift();
+    if (s.length < OWN_RANGE_MIN_FRAMES) return;
+    let low = percentile(s, CALIBRATION_LOW_PERCENTILE);
+    let high = percentile(s, CALIBRATION_HIGH_PERCENTILE);
+    if (high - low < CALIBRATION_MIN_SPAN) {
+      const mid = (low + high) / 2;
+      low = mid - CALIBRATION_MIN_SPAN / 2;
+      high = mid + CALIBRATION_MIN_SPAN / 2;
+    }
+    const x = mapFocusScore(signal.index, low, high);
+    // About the same smoothing as the server's score, at the 2 Hz frame rate.
+    smooth.current = smooth.current === null ? x : smooth.current + 0.3 * (x - smooth.current);
+    setValue(smooth.current);
+  }, [signal, learning]);
+
+  return value;
+}
+
 export function CalibrateScreen() {
   const { router, session, dispatch, station } = useKiosk({ needsPlayer: true });
   const status = useStationStatus(station);
@@ -31,6 +81,9 @@ export function CalibrateScreen() {
   const [result, setResult] = useState<Calibration | null>(null);
   const [previous, setPrevious] = useState<Calibration | null>(null);
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ownRange = useOwnRangeFocus(station, stage !== "done");
+  // Once calibrated, the needle shows the real focus score from the server.
+  const needle = stage === "done" ? (focus?.score ?? null) : ownRange;
 
   useEffect(() => {
     if (!session.player) return;
@@ -226,10 +279,10 @@ export function CalibrateScreen() {
 
         <aside className={styles.live}>
           <Panel tone="sunken" className={styles.gaugePanel}>
-            <FocusGauge value={status?.connected ? (focus?.score ?? null) : null} size={240} />
+            <FocusGauge value={status?.connected ? needle : null} size={240} />
           </Panel>
           <p className={k.note}>
-            The needle is live. During calibration it is not scored; it is learning what calm and focused look like for you.
+            The needle is live. While calibrating it follows your own signal and is not scored; afterwards it shows your real focus.
           </p>
         </aside>
       </div>
