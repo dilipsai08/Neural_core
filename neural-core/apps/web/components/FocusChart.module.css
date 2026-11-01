@@ -1,0 +1,53 @@
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.grid {
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+.threshold {
+  stroke: var(--volt);
+  stroke-dasharray: 4 6;
+  opacity: 0.5;
+}
+
+.axis {
+  fill: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.line {
+  fill: none;
+  stroke: var(--arc);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+
+.band {
+  fill: var(--volt);
+  opacity: 0.06;
+}
+
+.band[data-mult="3"] {
+  opacity: 0.1;
+}
+
+.band[data-mult="5"],
+.band[data-mult="8"] {
+  fill: var(--arc);
+  opacity: 0.12;
+}
+
+.kill {
+  stroke: var(--text-1);
+  stroke-width: 2;
+}
+
+.breach {
+  stroke: var(--alert);
+  stroke-width: 3;
+}

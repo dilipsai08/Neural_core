@@ -3,13 +3,17 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "pnpm --parallel --filter @neural-core/* dev",
+    "dev": "pnpm --filter @neural-core/shared build && pnpm --parallel --filter @neural-core/shared --filter @neural-core/api --filter @neural-core/web dev",
     "dev:api": "pnpm --filter @neural-core/api dev",
     "dev:web": "pnpm --filter @neural-core/web dev",
-    "build": "pnpm -r build",
+    "build": "pnpm --filter @neural-core/shared build && pnpm --filter @neural-core/web build && pnpm --filter @neural-core/api build",
+    "start": "node apps/api/dist/index.js",
+    "bridge": "pnpm --filter @neural-core/shared build && pnpm --filter @neural-core/api bridge",
+    "typecheck": "pnpm --filter @neural-core/shared build && pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm --filter @neural-core/shared build && pnpm -r test",
+    "sensor:check": "pnpm --filter @neural-core/shared build && pnpm --filter @neural-core/api sensor:check",
+    "postinstall": "pnpm --filter @neural-core/shared build"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

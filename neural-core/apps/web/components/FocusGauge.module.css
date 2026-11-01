@@ -1,0 +1,114 @@
+.gauge {
+  position: relative;
+  flex: none;
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.face {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55));
+}
+
+.zone {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: butt;
+  opacity: 0.32;
+  transition: opacity var(--t-med) var(--ease);
+}
+
+.zAlert {
+  stroke: var(--alert);
+}
+.zWarn {
+  stroke: var(--warn);
+}
+.zSteady {
+  stroke: var(--steady);
+}
+.zArc {
+  stroke: var(--arc);
+}
+
+/* Only the zone the needle sits in lights up; glow is reserved for "locked in". */
+.gauge[data-band="scattered"] .zAlert,
+.gauge[data-band="drifting"] .zWarn,
+.gauge[data-band="steady"] .zSteady {
+  opacity: 1;
+}
+
+.gauge[data-band="locked"] .zArc {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px var(--arc));
+}
+
+.tick {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 0.8;
+}
+
+.tickMajor {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1.4;
+}
+
+.scale {
+  fill: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.needle {
+  fill: var(--text-1);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6));
+}
+
+.gauge[data-band="locked"] .needle {
+  fill: var(--arc);
+}
+
+.hub {
+  fill: #2b3239;
+  stroke: rgba(255, 255, 255, 0.15);
+}
+
+.hubCap {
+  fill: #0b0e11;
+}
+
+.readout {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.value {
+  font-size: calc(var(--gauge, 280px) * 0.19);
+  font-weight: 500;
+  color: var(--text-1);
+}
+
+.gauge[data-band="locked"] .value {
+  color: var(--arc);
+  text-shadow: 0 0 18px rgba(127, 227, 255, 0.45);
+}
+
+.caption {
+  margin-top: var(--s-1);
+  font-family: var(--font-mono);
+  font-size: max(10px, calc(var(--gauge, 280px) * 0.048));
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}

@@ -1,0 +1,81 @@
+.panel {
+  position: relative;
+  border-radius: var(--radius-2);
+  padding: var(--s-4);
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.035), transparent 38%),
+    linear-gradient(180deg, var(--bg-3), var(--bg-2));
+  box-shadow: var(--shadow-2);
+}
+
+.sunken {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  box-shadow: var(--shadow-inset);
+}
+
+/* A thin hazard band on the top edge only, like tape on a cabinet door. */
+.hazard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  border-radius: var(--radius-2) var(--radius-2) 0 0;
+  background: var(--hazard);
+  opacity: 0.85;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.aside {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screw {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #59626b, #23282d 70%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 1px rgba(0, 0, 0, 0.6);
+}
+
+.screw::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 4px;
+  height: 1.5px;
+  background: rgba(0, 0, 0, 0.55);
+  transform: rotate(35deg);
+}
+
+.tl {
+  top: 10px;
+  left: 10px;
+}
+.tr {
+  top: 10px;
+  right: 10px;
+}
+.bl {
+  bottom: 10px;
+  left: 10px;
+}
+.br {
+  bottom: 10px;
+  right: 10px;
+}

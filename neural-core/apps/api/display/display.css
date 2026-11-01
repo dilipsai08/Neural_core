@@ -1,0 +1,409 @@
+:root {
+  --bg: #0b0d10;
+  --panel: #12161b;
+  --panel-2: #171c22;
+  --line: #232a32;
+  --text: #f2f5f7;
+  --text-2: #a9b3bc;
+  --text-3: #6c7782;
+  --accent: #5fe1ea;
+  --gold: #e3c66b;
+  --silver: #c9d1d8;
+  --bronze: #d29a63;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Laid out for 1920×1080 with 1rem = 10px; everything scales with the screen. */
+  font-size: min(0.5208vw, 0.9259vh);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden;
+  cursor: none;
+}
+
+.num {
+  font-family: "Cascadia Mono", "Consolas", "SFMono-Regular", "DejaVu Sans Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 3rem 5rem 2.5rem;
+  background:
+    radial-gradient(80rem 40rem at 85% -10%, rgba(95, 225, 234, 0.07), transparent 60%),
+    var(--bg);
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────── */
+
+.head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4rem;
+}
+
+.logos {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo {
+  height: 6rem;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-ees {
+  height: 7.5rem;
+}
+
+/* Logos are transparent PNGs; the NIT Warangal crest is drawn white for the dark screen. */
+.logo-nitw {
+  height: 7rem;
+}
+
+.sep {
+  width: 1px;
+  height: 4.5rem;
+  background: var(--line);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.kicker,
+.stat-label,
+.cols,
+.banner-kicker {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+h1 {
+  font-size: 5.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+h1 .thin {
+  font-weight: 300;
+  color: var(--text-2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.stat-value {
+  font-size: 5.6rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* A thin line of current under the header. */
+.rule {
+  position: relative;
+  height: 2px;
+  margin: 2.4rem 0 1.6rem;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.rule span {
+  position: absolute;
+  inset: 0;
+  width: 22%;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: current 6s linear infinite;
+}
+
+@keyframes current {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(560%);
+  }
+}
+
+/* ─── Board ──────────────────────────────────────────────────────────── */
+
+.cols,
+.row {
+  display: grid;
+  grid-template-columns: 8rem 1fr 13rem 13rem 17rem;
+  align-items: center;
+  column-gap: 2rem;
+  padding: 0 2.5rem;
+}
+
+.cols {
+  padding-bottom: 1rem;
+}
+
+.r {
+  text-align: right;
+}
+
+.board {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.rows {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.row {
+  position: relative;
+  height: 6.6rem;
+  border-radius: 0.6rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  will-change: transform;
+}
+
+.row[data-podium] {
+  height: 8.8rem;
+  background: linear-gradient(90deg, var(--panel-2), var(--panel));
+}
+
+.row[data-podium]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  bottom: 0.9rem;
+  width: 0.35rem;
+  border-radius: 0 0.3rem 0.3rem 0;
+  background: var(--plate);
+}
+
+.row[data-podium="1"] {
+  --plate: var(--gold);
+}
+.row[data-podium="2"] {
+  --plate: var(--silver);
+}
+.row[data-podium="3"] {
+  --plate: var(--bronze);
+}
+
+.rank {
+  font-size: 2.8rem;
+  color: var(--text-3);
+}
+
+.row[data-podium] .rank {
+  font-size: 3.6rem;
+  color: var(--plate);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.name {
+  font-size: 2.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row[data-podium] .name {
+  font-size: 3.4rem;
+}
+
+.title {
+  font-size: 1.2rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.focus,
+.mult {
+  font-size: 2.4rem;
+  text-align: right;
+  color: var(--text-2);
+}
+
+.score {
+  font-size: 3.2rem;
+  text-align: right;
+}
+
+.row[data-podium] .score {
+  font-size: 3.8rem;
+}
+
+.empty {
+  padding: 6rem 0;
+  text-align: center;
+  font-size: 2.2rem;
+  color: var(--text-2);
+}
+
+/* ─── Transitions ────────────────────────────────────────────────────── */
+
+.row.enter {
+  animation: enter 900ms var(--ease) both;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateX(-3rem);
+  }
+}
+
+.row.leave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transition: opacity 500ms ease;
+  opacity: 0;
+}
+
+/* The shift that just finished glows for a while. */
+.row.latest {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 2.4rem rgba(95, 225, 234, 0.25);
+  animation: glow 2.4s ease-in-out 4;
+}
+
+.row.latest.enter {
+  animation:
+    enter 900ms var(--ease) both,
+    glow 2.4s ease-in-out 900ms 4;
+}
+
+@keyframes glow {
+  50% {
+    box-shadow:
+      0 0 0 1px var(--accent),
+      0 0 3.6rem rgba(95, 225, 234, 0.45);
+  }
+}
+
+.row.latest .name {
+  color: var(--accent);
+}
+
+/* Announcement banner. */
+.banner {
+  position: absolute;
+  left: 50%;
+  bottom: 6rem;
+  display: flex;
+  align-items: baseline;
+  gap: 2.4rem;
+  padding: 1.8rem 3.2rem;
+  border-radius: 0.8rem;
+  background: rgba(18, 22, 27, 0.96);
+  border: 1px solid var(--accent);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, 2rem);
+  opacity: 0;
+  transition:
+    transform 700ms var(--ease),
+    opacity 700ms var(--ease);
+}
+
+.banner.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+.banner-kicker {
+  color: var(--accent);
+}
+
+.banner-name {
+  font-size: 2.4rem;
+  font-weight: 600;
+}
+
+.banner-score {
+  font-size: 2.4rem;
+}
+
+.banner-rank {
+  font-size: 1.8rem;
+  color: var(--text-2);
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────── */
+
+.foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--line);
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+
+.dot[data-on="true"] {
+  background: var(--accent);
+  box-shadow: 0 0 0.8rem var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

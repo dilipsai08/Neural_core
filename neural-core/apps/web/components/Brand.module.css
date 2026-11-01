@@ -1,0 +1,49 @@
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.mark {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.nut {
+  fill: #20262c;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1;
+}
+
+.bore {
+  fill: #0a0c0e;
+  stroke: rgba(0, 0, 0, 0.8);
+}
+
+.arc {
+  fill: var(--volt);
+}
+
+.words {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sub {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}

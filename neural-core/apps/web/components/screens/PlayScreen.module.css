@@ -1,0 +1,232 @@
+.screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #050708;
+}
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  font-size: 220px;
+  font-weight: 500;
+  color: var(--text-1);
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+  animation: count 900ms var(--ease) both;
+}
+
+@keyframes count {
+  from {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+}
+
+.banner {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  padding: var(--s-2) var(--s-5);
+  border-radius: var(--radius-1);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 64px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #04161c;
+  background: linear-gradient(180deg, #e2f9ff, var(--arc));
+  box-shadow: 0 0 40px rgba(127, 227, 255, 0.45), 0 10px 30px rgba(0, 0, 0, 0.4);
+  animation: stamp 1400ms var(--ease) both;
+}
+
+.banner[data-kind="break"] {
+  font-size: 40px;
+  color: #ffd2cc;
+  background: rgba(60, 18, 14, 0.85);
+  box-shadow: 0 0 0 1px rgba(229, 88, 74, 0.5) inset;
+}
+
+@keyframes stamp {
+  0% {
+    transform: translateX(-50%) scale(1.4);
+    opacity: 0;
+  }
+  12% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-16px);
+    opacity: 0;
+  }
+}
+
+.radio {
+  position: absolute;
+  left: var(--s-5);
+  bottom: var(--s-4);
+  width: 520px;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius-2);
+  pointer-events: none;
+  background: rgba(10, 13, 16, 0.72);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 0 var(--edge-hi) inset, inset 3px 0 0 var(--volt);
+  animation: slide 260ms var(--ease) both;
+}
+
+@keyframes slide {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+.radioFrom {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--volt);
+}
+
+.radioText {
+  margin-top: var(--s-1);
+  font-size: var(--fs-md);
+  line-height: 1.4;
+}
+
+.briefing {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(5, 7, 9, 0.55), rgba(5, 7, 9, 0.88));
+}
+
+.briefCard {
+  width: min(880px, 90vw);
+  padding: var(--s-5) var(--s-6);
+  border-radius: var(--radius-3);
+  background: linear-gradient(180deg, rgba(25, 30, 35, 0.94), rgba(13, 16, 19, 0.96));
+  box-shadow: var(--shadow-2), inset 4px 0 0 var(--volt);
+}
+
+.briefLine {
+  margin-top: var(--s-3);
+  font-size: var(--fs-xl);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 500ms var(--ease),
+    transform 500ms var(--ease);
+}
+
+.briefLine[data-on="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+.briefFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+  padding-top: var(--s-3);
+  box-shadow: 0 -1px 0 var(--edge-mid);
+}
+
+.goal {
+  color: var(--text-2);
+  font-size: var(--fs-md);
+}
+
+.goal :global(.num) {
+  color: var(--volt);
+}
+
+.goal em {
+  display: block;
+  font-style: normal;
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--scrim);
+  cursor: default;
+}
+
+.pauseCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  max-width: 560px;
+  padding: var(--s-6);
+  text-align: center;
+  border-radius: var(--radius-3);
+  background: linear-gradient(180deg, var(--bg-3), var(--bg-2));
+  box-shadow: var(--shadow-2);
+}
+
+.pauseCard h2 {
+  font-size: var(--fs-2xl);
+}
+
+.pauseCard p {
+  color: var(--text-2);
+}
+
+.pauseCard > :global(svg) {
+  color: var(--volt);
+}
+
+.pauseCard[data-error="true"] > :global(svg) {
+  color: var(--alert);
+}
+
+.small {
+  font-size: var(--fs-sm);
+}
+
+.linkWarn {
+  position: absolute;
+  top: var(--s-3);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--s-1) var(--s-3);
+  border-radius: 999px;
+  background: var(--alert-dim);
+  color: #ffc2ba;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}

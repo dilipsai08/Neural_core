@@ -1,0 +1,110 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3) var(--s-2) var(--s-2);
+  border-radius: var(--radius-1);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.025), transparent);
+  box-shadow: 0 1px 0 var(--edge-mid) inset;
+}
+
+.row[data-me="true"] {
+  background: linear-gradient(90deg, var(--volt-dim), transparent);
+  box-shadow: 0 0 0 1px rgba(244, 196, 48, 0.35) inset;
+}
+
+/* Rank plates: brushed metal for the podium, plain graphite otherwise. */
+.rank {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  font-size: var(--fs-md);
+  font-weight: 500;
+  color: var(--text-2);
+  background: linear-gradient(180deg, var(--bg-4), var(--bg-2));
+  box-shadow: var(--shadow-1);
+}
+
+.rank[data-plate="gold"] {
+  color: #2a1f08;
+  background: linear-gradient(165deg, var(--gold-1) 0%, #b8913e 45%, var(--gold-2) 100%);
+}
+
+.rank[data-plate="silver"] {
+  color: #1d2125;
+  background: linear-gradient(165deg, var(--silver-1) 0%, #a8afb6 45%, var(--silver-2) 100%);
+}
+
+.rank[data-plate="bronze"] {
+  color: #2a160a;
+  background: linear-gradient(165deg, var(--bronze-1) 0%, #a86a40 45%, var(--bronze-2) 100%);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  letter-spacing: 0.04em;
+}
+
+.score {
+  font-size: var(--fs-lg);
+  font-weight: 500;
+}
+
+.xl .row {
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4) var(--s-3) var(--s-3);
+}
+
+.xl .rank {
+  width: 64px;
+  height: 64px;
+  font-size: 32px;
+}
+
+.xl .name {
+  font-size: 44px;
+}
+
+.xl .meta {
+  font-size: 18px;
+}
+
+.xl .score {
+  font-size: 48px;
+}
+
+.empty {
+  padding: var(--s-4) 0;
+  color: var(--text-2);
+}

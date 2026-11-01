@@ -1,0 +1,68 @@
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.head {
+  fill: #1b2126;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.5;
+}
+
+.ear {
+  fill: #232a30;
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1.2;
+}
+
+.band {
+  fill: none;
+  stroke: #2f373e;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.brow {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.electrode {
+  fill: #0b0e11;
+  stroke: var(--volt);
+  stroke-width: 2.5;
+}
+
+.core {
+  fill: var(--volt);
+}
+
+.lead {
+  stroke: var(--volt);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+
+.tag {
+  fill: var(--text-1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+}
+
+.caption {
+  fill: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.inset rect {
+  fill: var(--bg-1);
+  stroke: rgba(255, 255, 255, 0.08);
+}

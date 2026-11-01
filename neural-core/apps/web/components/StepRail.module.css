@@ -1,0 +1,50 @@
+.rail {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin: 0;
+  padding: var(--s-1);
+  list-style: none;
+  border-radius: var(--radius-1);
+  background: var(--bg-1);
+  box-shadow: var(--shadow-inset);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: 4px;
+  color: var(--text-3);
+  transition:
+    background-color var(--t-med) var(--ease),
+    color var(--t-med) var(--ease);
+}
+
+.index {
+  font-size: var(--fs-xs);
+}
+
+.label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step[data-state="done"] {
+  color: var(--text-2);
+}
+
+.step[data-state="done"] .index {
+  color: var(--steady);
+}
+
+.step[data-state="active"] {
+  color: var(--text-on-accent);
+  background: linear-gradient(180deg, #ffd24d, var(--volt-deep));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}

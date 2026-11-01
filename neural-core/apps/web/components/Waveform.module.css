@@ -1,0 +1,7 @@
+.canvas {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius-1);
+  background: var(--bg-0);
+  box-shadow: var(--shadow-inset);
+}
